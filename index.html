@@ -1,0 +1,2951 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#09090b" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="FretGym" />
+  <title>FretGym</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800;900&family=JetBrains+Mono:wght@600;700;800&family=Righteous&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: #121215;
+      color: #f4f4f5;
+      overflow-x: hidden;
+    }
+    .funky-title {
+      font-family: 'Righteous', cursive, sans-serif;
+      letter-spacing: 0.03em;
+      text-shadow: 0 2px 12px rgba(245, 158, 11, 0.28);
+    }
+    .mono { font-family: 'JetBrains Mono', monospace; }
+    .staff-scroll-container::-webkit-scrollbar { height: 8px; }
+    .staff-scroll-container::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
+    .staff-scroll-container::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 4px; }
+    .staff-scroll-container::-webkit-scrollbar-thumb:hover { background: #64748b; }
+    .sheet-paper {
+      background: linear-gradient(180deg, #fffef9 0%, #faf8f0 100%);
+      box-shadow: inset 0 1px 3px rgba(15, 23, 42, 0.08), 0 10px 25px -5px rgba(0, 0, 0, 0.35);
+    }
+    .key-btn {
+      transition: all 0.12s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .key-btn:active {
+      transform: translateY(1px) scale(0.97);
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col bg-zinc-950 text-slate-100 selection:bg-indigo-500 selection:text-white">
+
+  <!-- Top Navigation Bar -->
+  <header id="topNavHeader" class="sticky top-0 z-30 bg-zinc-900/95 backdrop-blur border-b border-zinc-800 px-3 sm:px-6 py-3">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
+      <!-- Funky Brand Logo & Title -->
+      <div class="flex items-center gap-3">
+        <div class="relative w-12 h-12 rounded-2xl overflow-hidden border-2 border-amber-400/70 flex items-center justify-center shadow-lg shadow-amber-500/20 transform -rotate-3 hover:rotate-0 transition-transform bg-zinc-900">
+          <img src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBAUEBAYFBQUGBgYHCQ4JCQgICRINDQoOFRIWFhUSFBQXGiEcFxgfGRQUHScdHyIjJSUlFhwpLCgkKyEkJST/2wBDAQYGBgkICREJCREkGBQYJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCT/wAARCABgAGADASIAAhEBAxEB/8QAHAAAAQQDAQAAAAAAAAAAAAAABAAFBgcBAwgC/8QARBAAAQMCAwMIBwUFBwUAAAAAAQIDBAURAAYhEjFBBxMiUVRhwuIUMjVxc5GTI0JSgaEVJVNiYwgWFzNDcrKClMHR8P/EABsBAAMAAwEBAAAAAAAAAAAAAAABBgMEBQIH/8QAMREAAQIDBQYFBAMBAAAAAAAAAQIDAAQRBRIhMUEiUWFxodETUrHB8AYUYoEyQvHh/9oADAMBAAIRAxEAPwCw+Xjl5HJ0E0CgIZk5hfb21KcG03CQdylD7yzwTutqdLA8tV6sV3MsgzM05hmSn19INvuKWQD1NjooHdphVevP5lzJW80zDzj8mQt5AVqElSrIHuSkDT+UYZVKUtRUpRUom5JNyT1nCAKiQDQCHgBUxv8AQ6X2t/6HmwvQ6X2t/wCh5sD4xj14R8x6doPE4CCfQ6V2t/6HmwvQ6X2t/wCh5sDYwdN+nvweF+R6doL/AAEFeh0rtb/0PNjHolK7W/8AQ82Bhru1widnfpbrweEfMenaC/wEE+iUrtcj6HmxgxaX2t/6Hmx5bgzHo8iS1EkuMRtnn3UNKKGb7to2sm/C+FUKbNpMpUSoQ5EOSkBSmZDZQsAi4NjrYjCuCtLx6doL/AQ70Cs1zLUgS8rZhmxX0dLm2XFIKgOts9FY7tcdS8g/Lz/iLtUCvoZjZhYbLiVNjZbmoG9SR91Y4p3W1GlwOO0qKVBSVFKgbgg2IPXh+o1ffy1mSh5piHYfjSEvLCdAopVZY9ykk6fzHCIKSATUGDAiohrhex5R/qteLGjBEL2NJ+K14sDY9NZq5+wgXpyjOJPl/IsqrR486fI/ZsCSopjK5lT0iaRoRHYT0nLbislKBxVjRkijRKtVnX6k0t6m02OqdKZQbKfSkhKGQeBccW23fhtE8MdIZfo6qM0Z04Mu1yW2j0l5CQEMJA6LDKdyGkDRKRuAvvJOOba9qokGwaVUch8+eo2pGRVNLoMAIgVG5H2W20LTlqOgfx8xTVurV3iPHKEJ9xWrEha5OjHTZD+W4/dGy5GIH5uhZ+ZxLVSBcqJues430hkVapsxCvZSokrV1JAuf0xPsWpOv7alUG4Af71ikTZEu0kqWKgRAZ2RnSDdWWZY/DJy9GTf82wg/riH1fLkbLkyFV3sq0htMOUh512G+6WS2DrtRnSsG1wrRXDccW1n+RDZiRahQnrQ31LZUQDcLQRe1+BBBvirKnPXIcVFaQJMlaSShR0Sn8SzwHdvO4d1ZZ7RmJcrdVROIMdNmxJBcr925sAb64EaEZZ6UxixaDmWm5wivVanR0jMUVXMVSjvrHNTmrW2FHcQQTzbh69k9EkCP5opNGzNTYEVyM3JYTzn7GffuHWla7cF9V9oWIOwTqCmxuU9OFQZzWVI7c2lvJ9PiqRzjjp6bifVATbUtkWQW9dmyFp3KvKpNVgVant1iKtSqfWUpTJReymHrgIfHUsKAST1hB4G8bNyj8i8hTB2TkQMajQ78Bs7xVJ0In5ZhuavDUZj377jjFE1ZAZqkxoRzG2Hlp5ggjmyDqmx1FjfT9TvwpPsWN8V3w4cc8SlSczSw6wlqSzssSFJOjzqRYuAcLi2mG6R7EjfGd8OLNLhcQ2sihNPSOGtsNrWgGoFfWPcL2LJ+K14sDYIh+xZPxWvFgbGVr+3P2EYl6cosPkrDZh1UqAO1UKQhfw/SVq+W0lv9MXxKlXcWoneTjnLk5lLEms05q5el05T0dI3qfjLTJQB3kNOD88XUqstzIrcplYU26gOJUOIIvidtuz1TD7ahllFb9Lth1K0jMEdf8g+ZU0sIKifcOvG3IkmTVK++yi+09EfaSrXZbJQbE9QvbXERkSVy30oTclRskYvXJ2WGss0hDKEJ9McQFvuEXuq2if9o/8AeM8yw3IywSRtKy7xS2y61IypSoVWvAd/1FWcrD7dJi0rKlMVtuRUFyS/s7QbU5bXZ+8ogXCeoi+Kpm1SPR2FstgKdVcpdPSXIURvvxVxB3DuA0tjlC5NnqbTJ1RRU6nVq5K25PNx0pbCUpIK3CTc7KbgDdwtuOKcptIWlwSZvTeAslB9VsdQ/wDtd5xR/TlnLtFIabVVIxJ569olm2pm0Clu/sCprpicTzJrGlmkO1Qql1CyFrF0ITubPWO/jf5WxtGYzlTLjzc6Cp9VWMj0cocAQ6UKLS1qG9BJ1NvWIuLG+Hd1xEdlyQ6bNtJK1E9QFziH8oy1R5VFoyxZ2mUpkPp/C++VSXB7wXkp/wCnFD9VWTKNMMsBOOPPCnvDtR9uRCG5TA0IOtecRIE21UpSjqpSjck8Tg5/2JG+M74cA3wa97DjfGd8OJVz+vP2MSqNeUbInsWT8VrxYFvgqJ7Fk/Fa8WPFPhmpVCLBS80wqU8hgOuq2UNlSgkKUeAF8DZpeJ3+wgXpyjdRavJy/WINYhgGRBkIkNA7lqQQSk9xGh7ji3mJMaAXYMNwmm7CZlPWo+tCdBW1fvR0mz1Fs4k+Y8niqcm5o7EOIqpZbKGXaa23zfpSNk/atHekrAK0q16QWlV7EYrKixlJpEaNUlqdiwecfgtuN7DyozxC7r1spvbSVBG4KK9d4GnZtqNzRKinI761Gh4VzHD9x3bJm1WXMB4bQIIIy+UNIe49UnqktVCAUtMsqDzTi29oSCkjcDuTe2p9bhoRe8MsVeXU68a67mR+VQWqWmWpC1JAadVdKkrSkAAiyrA92OcqzWHZktyJB2luOGy7+q3uIXppc77fPhi5+TPLkyo5M/ZtIqbceSHxLmSXE84Vu/6aCOI6JUb6ajTG3aMo460Jp7ZTW7WmAB+Z743HpqYn70zMYJyroOA+ZxI6bVah/eWTmmZIAoMillwpI6DSApQQ3c/fuDpxKjikXgHZLi0JslSiQOoYn2cpdUqeTaeupy1OPx58iOsIslDlgkhQSmw01F7ccQVamoUZyTIWltptJUpStwAxdfR0kJdpyZUQK7NBlRNca6k74Sp0SqFEYE4YcK0jSWYj8tpioaU5hCp9RPVEZspafes7DQ73BipqzV5Veq82rTSDKnPrku23BS1EkDuF7DuAxM8+1VylU40FQU3U6iWpdVQd8ZpPSjRD1KG1zzg/EpA+5iAY4Fs2h97NKcH8RgOX/Ymn3lOqvKhYOe9hxvjO+HABODnfYcf4zvhxxXc08/Yx4Rryj3G9iyfiteLB+TKxBoOaKfPqlPbqEBLhbkMLb2yULBSVJTxUNq47xhvin9yyR/Va8WB2nlR3m3kJQtTa0rCVi6VEG9iOrTHkNhaVoVkcOghqNLpHzGOppc91t+GqFMEyXDj/ALplOKsmsQLgllxX8RGnSOoISvisYrvPdJVOjjMVCU83G51ZkMtp+1grJ+1KUdd9VI6+kN5vFqDyoKcdcg1tDjUN94vsyW1Ergvkk84jTcb69ZJNjtKBdJ3KbS2HH5rT5fnocS26hhopZnpGgcBPqEC9jv4dJJFpNqz5uUmy43id+hB0O7f+Jqf4nChlVSjjFHlAeoI3fMRhmMdURuCmEup09lthEcNtVaKhRWIjhsEyUEkkx3tDf7iyQdFJOJblvMtXyu8tymPpQHU7Ljbidtt1PeP/ADiqahnp85qbr9DYTTyy0GEIcSlaXm7EKQ6j1VJUCQUbrfPEyy7XabU0g0Qwmr6u0GoTEsLYVxMV9whLjXUhRC07ukLHH1WxrYaXKfZWkiqDv04H2OkayrTLbapVJvIBwPCJdVK3UcwKQuctlDTCSG2WWw20ynebJH6necRSsZijUeEzXn223klRNFhui4mPJNvSnE9naUOiD/mOAD1UqxjMuY6fTGiK0YT+zq1QIExL6n18DLfbJShscW0KK1buiLnFYVqtT8w1N6p1N/npLtgSEhKEJAslCEjRKEiwCRoAMO0rVaDX2ciLretPTudY4i1qWq8uB5Ml+ZJdlSnnJEh9anXXnVbS3FqN1KUeJJJONV8YwsTkKFhwd9hxvjO+HDffB7vsON8Z3w4xOZp5+xjIjXlDjKpEijVar5bmJ5uVHfWxZWn2jazb5j/kMMqgUqKVApUDYgixB6sdbcv/ACASM6SlZryqlsVoICZURSgkTAkWCkqOgcA010UANQRrzHWIdRo8oxMy0OXFlI6JMhtbLnz3K9+vvwsUkkCoMGBFDDERffjFgOAwfz1J7LI+v5cLnaT2WR9fy4fiHynp3hXOIgDHlSUqFlAEdRw487Seyyfr+XC52k9lk/X8uDxD5T07wXOIhtCQkWSAB1DGcOHO0nssn6/lwucpPZZP1/Lg8U+U/P3DuDeIb74xbDjzlJ7LJ/7jy4XOUnssn6/lweJ+J6d4VziIASkqUEpBJJsABck9Qw+Q6PIq9UpGWoieclyZCGLJ1+0cWLj8h/xOM0eFUKvKETLVDlypa+iOYbW8587WT79Pfjp3kA/s/wAjJkpOa81pbNaKCmLDSoKEMKFipRGhcI000SCdSTosVEEigEPBIoI//9k=" alt="FretGym Logo" class="max-w-full h-auto w-full object-cover" />
+        </div>
+        <div class="flex items-center gap-3">
+          <h1 class="funky-title text-2xl sm:text-3xl tracking-wider select-none flex items-center">
+            <span class="bg-gradient-to-r from-amber-400 via-fuchsia-400 to-cyan-400 bg-clip-text text-transparent transform -rotate-2 inline-block">Fret</span><span class="bg-gradient-to-r from-emerald-400 to-indigo-400 bg-clip-text text-transparent transform rotate-2 inline-block">Gym</span>
+          </h1>
+          <span id="headerModeBadge" class="text-xs sm:text-sm font-bold px-2.5 py-1 rounded-full bg-zinc-800 text-amber-300 border border-amber-500/30">
+            C Ionian
+          </span>
+        </div>
+      </div>
+
+      <!-- Main View Switcher Tabs: Settings -> Quiz -> Fretboard -> Analytics -->
+      <nav class="flex items-center bg-zinc-800/90 p-1 rounded-xl border border-zinc-700/70 gap-1">
+        <button id="navTabSettings" type="button" class="px-3.5 py-2 rounded-lg text-sm sm:text-base font-bold transition-all bg-indigo-600 text-white shadow">
+          Settings
+        </button>
+        <button id="navTabQuiz" type="button" class="hidden px-3.5 py-2 rounded-lg text-sm sm:text-base font-bold transition-all text-slate-300 hover:text-white">
+          Quiz
+        </button>
+        <button id="navTabGuide" type="button" class="px-3.5 py-2 rounded-lg text-sm sm:text-base font-bold transition-all text-slate-300 hover:text-white">
+          Fretboard
+        </button>
+        <button id="navTabStats" type="button" class="px-3.5 py-2 rounded-lg text-sm sm:text-base font-bold transition-all text-slate-300 hover:text-white">
+          Analytics
+        </button>
+      </nav>
+
+      <!-- Audio Toggle -->
+      <div class="flex items-center gap-2">
+        <button id="btnAudioToggle" type="button" class="flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-bold bg-zinc-800 hover:bg-zinc-700 text-emerald-400 border border-zinc-700 transition">
+          <span id="audioIcon" class="text-base">🔊</span>
+          <span id="audioLabel" class="hidden sm:inline">Acoustic</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Container -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 py-4 flex flex-col gap-4">
+
+    <!-- ==================== VIEW 1: SETTINGS (LANDING PAGE) ==================== -->
+    <section id="viewSettings" class="flex flex-col gap-4">
+      <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 sm:p-6 shadow-xl flex flex-col gap-6">
+
+        <!-- 1. Chromatic Key & Mode + Custom Scale Controls -->
+        <div class="flex flex-col gap-4">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <label class="text-sm sm:text-base font-extrabold uppercase tracking-wider text-indigo-400">Key &amp; Mode</label>
+
+            <!-- Custom Scale Dropdown & Builder Toggle -->
+            <div class="flex flex-wrap items-center gap-2">
+              <select id="selectSavedCustomScale" class="bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-2 text-xs sm:text-sm font-bold text-slate-200 focus:outline-none focus:border-indigo-500">
+                <option value="">Load Saved Custom Scale...</option>
+              </select>
+              <button id="btnDeleteCustomScale" type="button" class="hidden px-2.5 py-2 rounded-xl text-xs font-bold bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/30">
+                ✕
+              </button>
+            </div>
+          </div>
+
+          <!-- 12 Chromatic Notes Button Grid -->
+          <div id="chromaticKeyGrid" class="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-12 gap-2"></div>
+
+          <!-- Mode Buttons (7 Modes + Chromatic + Custom) -->
+          <div class="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-9 gap-2" id="modeButtonGrid"></div>
+
+          <!-- Custom Scale Builder Panel (Shown when Custom is active) -->
+          <div id="customScaleBuilderPanel" class="hidden bg-zinc-950 border border-indigo-500/40 rounded-2xl p-4 flex-col gap-3">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <span class="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-amber-400">
+                Custom Scale Intervals (Tap to toggle notes in scale)
+              </span>
+              <div class="flex items-center gap-2 w-full sm:w-auto">
+                <input id="inputCustomScaleName" type="text" placeholder="Custom scale name..." class="flex-1 sm:w-52 bg-zinc-900 border border-zinc-700 rounded-xl px-3 py-1.5 text-sm font-bold text-white focus:outline-none focus:border-indigo-500" />
+                <button id="btnSaveCustomScale" type="button" class="px-4 py-1.5 rounded-xl text-xs sm:text-sm font-extrabold bg-emerald-600 hover:bg-emerald-500 text-white shadow">
+                  Save Scale
+                </button>
+              </div>
+            </div>
+            <div id="customIntervalToggleGrid" class="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-12 gap-2"></div>
+          </div>
+
+          <!-- Large Scale Notes + Relative Ionian Positions (I, II, bIII, #IV, V, bVI, bVII) -->
+          <div id="scaleNotesPreview" class="bg-zinc-950/90 p-3 sm:p-4 rounded-2xl border border-zinc-800"></div>
+        </div>
+
+        <!-- 2. Fret Range (Auto-calculates Treble Clef Range) & Strings Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+          <!-- Fret Range + Associated Treble Clef Range (Requirement #4) -->
+          <div class="bg-zinc-800/50 p-4 rounded-2xl border border-zinc-700/60 flex flex-col gap-3">
+            <div class="flex items-center justify-between">
+              <label class="text-sm font-extrabold text-slate-200 uppercase tracking-wider">Fret Range</label>
+              <span id="fretRangeLabel" class="text-base mono font-black text-amber-400">0 – 24</span>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <span class="text-xs font-bold text-slate-400 block mb-1">Min Fret</span>
+                <input id="inputMinFret" type="number" min="0" max="24" value="0" class="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-3 py-2.5 text-base font-extrabold text-white focus:outline-none focus:border-indigo-500" />
+              </div>
+              <div>
+                <span class="text-xs font-bold text-slate-400 block mb-1">Max Fret</span>
+                <input id="inputMaxFret" type="number" min="0" max="24" value="24" class="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-3 py-2.5 text-base font-extrabold text-white focus:outline-none focus:border-indigo-500" />
+              </div>
+            </div>
+            <div class="grid grid-cols-4 gap-1.5">
+              <button type="button" data-fret-preset="0-4" class="fret-preset-btn text-xs font-bold py-2 rounded-lg bg-zinc-700 hover:bg-slate-600 text-slate-100">0–4</button>
+              <button type="button" data-fret-preset="0-12" class="fret-preset-btn text-xs font-bold py-2 rounded-lg bg-zinc-700 hover:bg-slate-600 text-slate-100">0–12</button>
+              <button type="button" data-fret-preset="5-12" class="fret-preset-btn text-xs font-bold py-2 rounded-lg bg-zinc-700 hover:bg-slate-600 text-slate-100">5–12</button>
+              <button type="button" data-fret-preset="0-24" class="fret-preset-btn text-xs font-bold py-2 rounded-lg bg-indigo-600 text-white">0–24</button>
+            </div>
+            <!-- Auto-computed Treble Clef Range Display -->
+            <div class="flex items-center justify-between bg-zinc-900/90 px-3.5 py-2.5 rounded-xl border border-zinc-700/80 mt-1">
+              <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Treble Clef Range</span>
+              <span id="autoClefRangeDisplay" class="mono text-sm sm:text-base font-black text-indigo-300">E3 – E7</span>
+            </div>
+          </div>
+
+          <!-- Strings (1-6) & Accidentals -->
+          <div class="bg-zinc-800/50 p-4 rounded-2xl border border-zinc-700/60 flex flex-col justify-between gap-3">
+            <div class="flex items-center justify-between">
+              <label class="text-sm font-extrabold text-slate-200 uppercase tracking-wider">Strings</label>
+              <select id="selectAccidentalStyle" class="bg-zinc-900 border border-zinc-700 rounded-lg px-2.5 py-1.5 text-xs font-bold text-white">
+                <option value="inline">Inline ♯/♭</option>
+                <option value="keysig">Key Sig</option>
+              </select>
+            </div>
+            <div id="stringFilterGroup" class="grid grid-cols-6 gap-2 my-auto">
+              <button type="button" data-string="1" class="str-toggle-btn py-3.5 rounded-xl text-lg font-black bg-indigo-600 text-white">1</button>
+              <button type="button" data-string="2" class="str-toggle-btn py-3.5 rounded-xl text-lg font-black bg-indigo-600 text-white">2</button>
+              <button type="button" data-string="3" class="str-toggle-btn py-3.5 rounded-xl text-lg font-black bg-indigo-600 text-white">3</button>
+              <button type="button" data-string="4" class="str-toggle-btn py-3.5 rounded-xl text-lg font-black bg-indigo-600 text-white">4</button>
+              <button type="button" data-string="5" class="str-toggle-btn py-3.5 rounded-xl text-lg font-black bg-indigo-600 text-white">5</button>
+              <button type="button" data-string="6" class="str-toggle-btn py-3.5 rounded-xl text-lg font-black bg-indigo-600 text-white">6</button>
+            </div>
+            <div class="flex items-center justify-between text-xs text-slate-400 px-1">
+              <span>1 = High E</span>
+              <span>6 = Low E</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Start Session CTA -->
+        <div class="flex flex-wrap items-center justify-end gap-4 pt-2 border-t border-zinc-800">
+          <button id="btnStartSession" type="button" class="w-full sm:w-auto px-10 py-4 rounded-2xl bg-gradient-to-r from-indigo-600 to-emerald-600 hover:from-indigo-500 hover:to-emerald-500 text-white font-black text-lg sm:text-xl shadow-xl shadow-indigo-600/30 transition transform active:scale-95 flex items-center justify-center gap-3">
+            <span>▶</span>
+            <span>Start Session</span>
+          </button>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ==================== VIEW 2: PRACTICE QUIZ ==================== -->
+    <section id="viewQuiz" class="hidden flex-col gap-3.5">
+
+      <!-- Live Session Metrics Bar -->
+      <div class="grid grid-cols-2 sm:grid-cols-5 gap-2.5 bg-zinc-900/90 border border-zinc-800 rounded-2xl p-3 shadow-lg">
+        <div class="flex items-center justify-between gap-2 px-3 py-1.5 bg-zinc-800/60 rounded-xl">
+          <div>
+            <div class="text-[11px] uppercase tracking-wider text-slate-400 font-bold">Time</div>
+            <div id="hudTimer" class="mono text-lg sm:text-xl font-extrabold text-white">00:00</div>
+          </div>
+          <button id="btnPauseResume" type="button" class="px-2.5 py-1.5 rounded-lg bg-zinc-700 hover:bg-slate-600 text-xs font-bold text-slate-200 transition">
+            Pause
+          </button>
+        </div>
+
+        <div class="px-3 py-1.5 bg-zinc-800/60 rounded-xl">
+          <div class="text-[11px] uppercase tracking-wider text-slate-400 font-bold">Notes</div>
+          <div class="flex items-baseline gap-1.5">
+            <span id="hudAttempted" class="mono text-lg sm:text-xl font-extrabold text-white">0</span>
+            <span id="hudCorrectCount" class="text-sm text-emerald-400 font-bold">(0✓)</span>
+          </div>
+        </div>
+
+        <div class="px-3 py-1.5 bg-zinc-800/60 rounded-xl">
+          <div class="text-[11px] uppercase tracking-wider text-slate-400 font-bold">Accuracy</div>
+          <div class="flex items-baseline gap-1.5">
+            <span id="hudAccuracy" class="mono text-lg sm:text-xl font-extrabold text-emerald-400">100%</span>
+            <span id="hudSplitAccuracy" class="mono text-xs text-slate-400">(100%/100%)</span>
+          </div>
+        </div>
+
+        <div class="px-3 py-1.5 bg-zinc-800/60 rounded-xl">
+          <div class="text-[11px] uppercase tracking-wider text-slate-400 font-bold">Speed</div>
+          <div class="flex items-baseline gap-1">
+            <span id="hudSpeed" class="mono text-lg sm:text-xl font-extrabold text-amber-400">0.0s</span>
+            <span id="hudSpeedSd" class="mono text-xs text-slate-400">±0.0s</span>
+          </div>
+        </div>
+
+        <div class="col-span-2 sm:col-span-1 flex items-center justify-end">
+          <button id="btnStopSession" type="button" class="w-full px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-extrabold text-sm sm:text-base shadow-sm transition flex items-center justify-center gap-2">
+            <span>⏹</span>
+            <span>Stop</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- SCROLLING SHEET MUSIC & TAB CANVAS (Requirement #5: No note range or fret range shown) -->
+      <div class="sheet-paper rounded-2xl border-2 border-slate-300 text-slate-900 p-2 sm:p-4 relative">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-2 px-1">
+          <span class="font-extrabold text-sm sm:text-base tracking-tight text-slate-800" id="sheetTitleLabel">C Ionian</span>
+          <div id="liveFeedbackBanner" class="text-xs sm:text-sm font-extrabold px-3 py-1 rounded-lg bg-indigo-50 text-indigo-900 border border-indigo-200">
+            Select Note &amp; Fret
+          </div>
+        </div>
+
+        <div id="staffScrollContainer" class="staff-scroll-container overflow-x-auto overflow-y-hidden w-full rounded-xl border border-slate-200 bg-[#fffef9] relative">
+          <svg id="notationSvg" class="block select-none" width="1360" height="386" viewBox="0 0 1360 386"></svg>
+        </div>
+
+        <!-- Floating Contextual Popup (Closes immediately after note & fret are entered, per Requirement #2) -->
+        <div id="DirectTapPopup" class="hidden fixed inset-0 z-40 bg-zinc-950/40 flex items-center justify-center p-4">
+          <div class="bg-zinc-900 border border-zinc-700 rounded-2xl max-w-md w-full p-5 shadow-2xl text-slate-100">
+            <div class="flex items-center justify-between pb-3 mb-3 border-b border-zinc-800">
+              <h3 id="popupTitle" class="font-extrabold text-base text-white">Select Note</h3>
+              <button id="btnClosePopup" type="button" class="w-8 h-8 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-slate-300 flex items-center justify-center text-base font-bold">✕</button>
+            </div>
+            <div id="popupContentNote" class="space-y-3">
+              <div class="grid grid-cols-3 gap-2">
+                <button type="button" data-popup-acc="b" class="popup-acc-btn py-3 rounded-xl font-black text-xl bg-zinc-800 border border-zinc-700 text-slate-200">♭</button>
+                <button type="button" data-popup-acc="" class="popup-acc-btn py-3 rounded-xl font-black text-xl bg-indigo-600 border border-indigo-400 text-white">♮</button>
+                <button type="button" data-popup-acc="#" class="popup-acc-btn py-3 rounded-xl font-black text-xl bg-zinc-800 border border-zinc-700 text-slate-200">♯</button>
+              </div>
+              <div class="grid grid-cols-7 gap-1.5">
+                <button type="button" data-popup-letter="C" class="popup-note-btn py-3.5 rounded-xl font-black text-xl bg-zinc-800 hover:bg-indigo-600 border border-zinc-700 text-white">C</button>
+                <button type="button" data-popup-letter="D" class="popup-note-btn py-3.5 rounded-xl font-black text-xl bg-zinc-800 hover:bg-indigo-600 border border-zinc-700 text-white">D</button>
+                <button type="button" data-popup-letter="E" class="popup-note-btn py-3.5 rounded-xl font-black text-xl bg-zinc-800 hover:bg-indigo-600 border border-zinc-700 text-white">E</button>
+                <button type="button" data-popup-letter="F" class="popup-note-btn py-3.5 rounded-xl font-black text-xl bg-zinc-800 hover:bg-indigo-600 border border-zinc-700 text-white">F</button>
+                <button type="button" data-popup-letter="G" class="popup-note-btn py-3.5 rounded-xl font-black text-xl bg-zinc-800 hover:bg-indigo-600 border border-zinc-700 text-white">G</button>
+                <button type="button" data-popup-letter="A" class="popup-note-btn py-3.5 rounded-xl font-black text-xl bg-zinc-800 hover:bg-indigo-600 border border-zinc-700 text-white">A</button>
+                <button type="button" data-popup-letter="B" class="popup-note-btn py-3.5 rounded-xl font-black text-xl bg-zinc-800 hover:bg-indigo-600 border border-zinc-700 text-white">B</button>
+              </div>
+            </div>
+            <div id="popupContentFret" class="hidden space-y-2">
+              <div id="popupFretGrid" class="grid grid-cols-5 sm:grid-cols-7 gap-2 max-h-64 overflow-y-auto p-1"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2-TAP SPLIT INPUT DOCK -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-3 bg-zinc-900 border border-zinc-800 rounded-2xl p-3 sm:p-4 shadow-xl">
+
+        <!-- Step 1: Note Name -->
+        <div id="dockStep1Card" class="lg:col-span-5 bg-zinc-800/70 rounded-xl p-3.5 border-2 border-indigo-500 transition-all flex flex-col justify-between gap-3">
+          <div class="flex items-center justify-between">
+            <span class="text-sm sm:text-base font-extrabold text-white">1. Note</span>
+            <span id="currentNoteInputBadge" class="mono text-base sm:text-lg font-black px-3 py-1 rounded-lg bg-zinc-900 text-indigo-300 border border-zinc-700">
+              ?
+            </span>
+          </div>
+
+          <div class="grid grid-cols-3 gap-2">
+            <button type="button" data-acc="b" class="acc-btn key-btn py-2.5 rounded-xl font-black text-xl bg-zinc-900 hover:bg-zinc-700 text-slate-200 border border-zinc-700 flex items-center justify-center">
+              ♭
+            </button>
+            <button type="button" data-acc="" class="acc-btn key-btn py-2.5 rounded-xl font-black text-xl bg-indigo-600 text-white border border-indigo-400 flex items-center justify-center shadow">
+              ♮
+            </button>
+            <button type="button" data-acc="#" class="acc-btn key-btn py-2.5 rounded-xl font-black text-xl bg-zinc-900 hover:bg-zinc-700 text-slate-200 border border-zinc-700 flex items-center justify-center">
+              ♯
+            </button>
+          </div>
+
+          <div class="grid grid-cols-7 gap-1.5">
+            <button type="button" data-note="C" class="note-letter-btn key-btn py-3.5 rounded-xl font-black text-lg sm:text-xl bg-zinc-900 hover:bg-indigo-600 text-white border border-zinc-700 shadow">C</button>
+            <button type="button" data-note="D" class="note-letter-btn key-btn py-3.5 rounded-xl font-black text-lg sm:text-xl bg-zinc-900 hover:bg-indigo-600 text-white border border-zinc-700 shadow">D</button>
+            <button type="button" data-note="E" class="note-letter-btn key-btn py-3.5 rounded-xl font-black text-lg sm:text-xl bg-zinc-900 hover:bg-indigo-600 text-white border border-zinc-700 shadow">E</button>
+            <button type="button" data-note="F" class="note-letter-btn key-btn py-3.5 rounded-xl font-black text-lg sm:text-xl bg-zinc-900 hover:bg-indigo-600 text-white border border-zinc-700 shadow">F</button>
+            <button type="button" data-note="G" class="note-letter-btn key-btn py-3.5 rounded-xl font-black text-lg sm:text-xl bg-zinc-900 hover:bg-indigo-600 text-white border border-zinc-700 shadow">G</button>
+            <button type="button" data-note="A" class="note-letter-btn key-btn py-3.5 rounded-xl font-black text-lg sm:text-xl bg-zinc-900 hover:bg-indigo-600 text-white border border-zinc-700 shadow">A</button>
+            <button type="button" data-note="B" class="note-letter-btn key-btn py-3.5 rounded-xl font-black text-lg sm:text-xl bg-zinc-900 hover:bg-indigo-600 text-white border border-zinc-700 shadow">B</button>
+          </div>
+        </div>
+
+        <!-- Step 2: Fret Number -->
+        <div id="dockStep2Card" class="lg:col-span-7 bg-zinc-800/70 rounded-xl p-3.5 border-2 border-zinc-700/80 transition-all flex flex-col justify-between gap-3">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <span class="text-sm sm:text-base font-extrabold text-white">
+              2. Fret (<span id="targetStringHighlight" class="text-amber-400">String 4</span>)
+            </span>
+            <div class="flex items-center gap-2">
+              <button id="btnHintPeek" type="button" class="px-3 py-1.5 rounded-lg text-xs sm:text-sm font-bold bg-zinc-900 hover:bg-zinc-700 text-amber-300 border border-zinc-700 transition">
+                💡 Hint
+              </button>
+              <button id="btnSkipNote" type="button" class="px-3 py-1.5 rounded-lg text-xs sm:text-sm font-bold bg-zinc-900 hover:bg-zinc-700 text-slate-300 border border-zinc-700 transition">
+                Skip ⏭
+              </button>
+            </div>
+          </div>
+
+          <div id="dockFretKeypad" class="grid grid-cols-7 sm:grid-cols-9 md:grid-cols-13 gap-1.5"></div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ==================== VIEW 3: FRETBOARD MAP ==================== -->
+    <section id="viewGuide" class="hidden flex-col gap-4">
+      <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 sm:p-5 shadow-lg flex flex-col gap-4">
+
+        <!-- Top Controls: Scale + Detected Chord on Left, Interval Multi-Select + Notes/Intervals Toggle on Right -->
+        <div class="flex flex-wrap items-center justify-between gap-4 pb-3 border-b border-zinc-800">
+          <!-- Left: Scale Badge & Detected Chord Name (Requirement #6) -->
+          <div class="flex flex-wrap items-center gap-3">
+            <div id="refSelectedKeyMode" class="text-base sm:text-lg font-black px-4 py-2 rounded-xl bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+              C Ionian
+            </div>
+            <div id="detectedChordBadge" class="text-sm sm:text-base font-extrabold px-4 py-2 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/40">
+              Chord: C Major (I · III · V)
+            </div>
+          </div>
+
+          <!-- Right: Multi-Select Interval Highlighter Buttons + View Toggle (Notes vs Intervals) -->
+          <div class="flex flex-wrap items-center gap-3">
+            <div id="mapIntervalSelector" class="flex flex-wrap items-center gap-1.5"></div>
+
+            <button id="btnToggleAllIntervals" type="button" class="px-3 py-2 rounded-xl text-xs sm:text-sm font-bold bg-zinc-800 hover:bg-zinc-700 text-slate-200 border border-zinc-700">
+              All
+            </button>
+
+            <!-- Toggle Notes vs Intervals -->
+            <div class="flex items-center bg-zinc-950 p-1 rounded-xl border border-zinc-800">
+              <button id="btnMapShowNotes" type="button" class="px-3 py-1.5 rounded-lg text-xs sm:text-sm font-bold bg-indigo-600 text-white">
+                Notes
+              </button>
+              <button id="btnMapShowIntervals" type="button" class="px-3 py-1.5 rounded-lg text-xs sm:text-sm font-bold text-slate-400 hover:text-white">
+                Intervals
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Fretboard Grid (Requirement #1: Pure notes/intervals, no octave numbers) -->
+        <div class="overflow-x-auto pb-2">
+          <div id="fretboardMapContainer" class="min-w-[920px]"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== VIEW 4: ANALYTICS & SESSION LOGS ==================== -->
+    <section id="viewStats" class="hidden flex-col gap-4">
+
+      <!-- Top Period Selector Bar (Daily, Weekly, Monthly, Yearly on Left; Custom + Export on Right per Req #7 & #11) -->
+      <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 shadow-lg flex flex-wrap items-center justify-between gap-3">
+        <!-- Left: Standard Time Views -->
+        <div class="flex items-center bg-zinc-950 p-1 rounded-xl border border-zinc-800 gap-1">
+          <button type="button" data-period="daily" class="period-btn px-3.5 py-2 rounded-lg text-xs sm:text-sm font-bold bg-indigo-600 text-white">Daily</button>
+          <button type="button" data-period="weekly" class="period-btn px-3.5 py-2 rounded-lg text-xs sm:text-sm font-bold text-slate-400 hover:text-white">Weekly</button>
+          <button type="button" data-period="monthly" class="period-btn px-3.5 py-2 rounded-lg text-xs sm:text-sm font-bold text-slate-400 hover:text-white">Monthly</button>
+          <button type="button" data-period="yearly" class="period-btn px-3.5 py-2 rounded-lg text-xs sm:text-sm font-bold text-slate-400 hover:text-white">Yearly</button>
+        </div>
+
+        <!-- Right: Separate Custom Date Range + Excel Export Button -->
+        <div class="flex flex-wrap items-center gap-2">
+          <button id="btnPeriodCustom" type="button" data-period="custom" class="period-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-zinc-800 hover:bg-zinc-700 text-slate-300 border border-zinc-700">
+            Custom Range
+          </button>
+          <div id="customDateRangeBox" class="hidden items-center gap-1.5">
+            <input id="inputDateFrom" type="date" class="bg-zinc-950 border border-zinc-700 rounded-xl px-2.5 py-1.5 text-xs sm:text-sm font-bold text-white" />
+            <span class="text-slate-400 font-bold">–</span>
+            <input id="inputDateTo" type="date" class="bg-zinc-950 border border-zinc-700 rounded-xl px-2.5 py-1.5 text-xs sm:text-sm font-bold text-white" />
+          </div>
+          <button id="btnExportExcel" type="button" disabled class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-extrabold bg-zinc-800 text-slate-500 border border-zinc-700 cursor-not-allowed transition">
+            ⬇ Export Excel
+          </button>
+        </div>
+      </div>
+
+      <!-- 1. BAR GRAPH FIRST (Requirement #8) -->
+      <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 shadow-lg">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+          <h3 id="chartHeading" class="text-sm sm:text-base font-extrabold text-white">Daily Mean (μ) ± SD (σ) — Accuracy (%)</h3>
+        </div>
+        <div class="relative h-72 w-full">
+          <canvas id="statsChartCanvas"></canvas>
+        </div>
+      </div>
+
+      <!-- 2. PARAMETERS & KPI SUMMARY BELOW BAR GRAPH (Requirement #8) -->
+      <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 shadow-lg flex flex-col gap-4">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <span class="text-sm font-extrabold uppercase tracking-wider text-indigo-400">Parameter</span>
+          <select id="selectStatMetric" class="bg-zinc-950 border border-zinc-700 rounded-xl px-4 py-2 text-sm font-extrabold text-white focus:outline-none focus:border-indigo-500">
+            <option value="accuracy">Accuracy (%)</option>
+            <option value="notesAttempted">Notes Attempted</option>
+            <option value="practiceTimeMin">Practice Time (Min)</option>
+            <option value="speedSec">Speed (Sec / Note)</option>
+          </select>
+        </div>
+
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <div class="bg-zinc-950 border border-zinc-800 rounded-xl p-3.5">
+            <div class="text-xs font-bold uppercase text-slate-400">Mean (μ)</div>
+            <div id="statKpiMean" class="mono text-2xl font-black text-indigo-400 mt-1">0.0%</div>
+          </div>
+          <div class="bg-zinc-950 border border-zinc-800 rounded-xl p-3.5">
+            <div class="text-xs font-bold uppercase text-slate-400">SD (σ)</div>
+            <div id="statKpiSd" class="mono text-2xl font-black text-amber-400 mt-1">±0.0%</div>
+          </div>
+          <div class="bg-zinc-950 border border-zinc-800 rounded-xl p-3.5">
+            <div class="text-xs font-bold uppercase text-slate-400">Total Sessions</div>
+            <div id="statKpiSessions" class="mono text-2xl font-black text-emerald-400 mt-1">0</div>
+            <div id="statKpiTotalNotes" class="text-xs text-slate-400 mt-0.5">0 notes</div>
+          </div>
+          <div class="bg-zinc-950 border border-zinc-800 rounded-xl p-3.5">
+            <div class="text-xs font-bold uppercase text-slate-400">Min – Max</div>
+            <div id="statKpiRange" class="mono text-2xl font-black text-white mt-1">—</div>
+          </div>
+        </div>
+
+        <!-- Aggregated Period Mean & SD Table -->
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse text-xs sm:text-sm">
+            <thead>
+              <tr class="border-b border-zinc-800 text-slate-400 uppercase text-xs">
+                <th class="py-2.5 px-3">Segment / Period</th>
+                <th class="py-2.5 px-3">Sessions</th>
+                <th class="py-2.5 px-3">Mean (μ)</th>
+                <th class="py-2.5 px-3">SD (σ)</th>
+                <th class="py-2.5 px-3">Accuracy (μ ± σ)</th>
+                <th class="py-2.5 px-3">Notes (μ ± σ)</th>
+                <th class="py-2.5 px-3">Time (μ ± σ)</th>
+                <th class="py-2.5 px-3">Speed (μ ± σ)</th>
+              </tr>
+            </thead>
+            <tbody id="periodStatsTableBody" class="divide-y divide-zinc-800/70 mono"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 3. RECENT SESSIONS (Last 5 + Load More + Manual Delete, Empty by default per Req #10) -->
+      <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 shadow-lg overflow-hidden flex flex-col gap-3">
+        <div class="flex items-center justify-between">
+          <h3 class="text-base font-extrabold text-white">Recent Sessions</h3>
+          <div class="flex items-center gap-2">
+            <span id="recentSessionsCountBadge" class="text-xs font-bold text-slate-400">0 saved</span>
+            <button id="btnClearLogs" type="button" class="hidden text-xs font-bold px-2.5 py-1 rounded-lg bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/30 transition">Clear All</button>
+          </div>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse text-xs sm:text-sm">
+            <thead>
+              <tr class="border-b border-zinc-800 text-slate-400 uppercase text-xs">
+                <th class="py-2 px-3">Session #</th>
+                <th class="py-2 px-3">Date &amp; Time</th>
+                <th class="py-2 px-3">Key &amp; Mode</th>
+                <th class="py-2 px-3">Notes</th>
+                <th class="py-2 px-3">Acc.</th>
+                <th class="py-2 px-3">Time</th>
+                <th class="py-2 px-3">Speed (μ ± σ)</th>
+                <th class="py-2 px-3 text-right">Delete</th>
+              </tr>
+            </thead>
+            <tbody id="rawSessionTableBody" class="divide-y divide-zinc-800/60"></tbody>
+          </table>
+        </div>
+        <div class="flex justify-center pt-1">
+          <button id="btnLoadMoreSessions" type="button" class="hidden px-5 py-2 rounded-xl text-xs sm:text-sm font-extrabold bg-zinc-800 hover:bg-zinc-700 text-indigo-300 border border-zinc-700 transition">
+            Load More
+          </button>
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- Stop Session Confirmation Prompt Modal (Requirement #9: Ask Yes/No before saving to Analytics) -->
+  <div id="stopSessionConfirmModal" class="hidden fixed inset-0 z-50 bg-zinc-950/75 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-zinc-900 border border-zinc-700 rounded-2xl max-w-md w-full p-5 shadow-2xl">
+      <div class="pb-3 mb-3 border-b border-zinc-800">
+        <h3 class="text-lg font-extrabold text-white">Save Session?</h3>
+        <p id="stopModalSub" class="text-xs text-slate-400 mt-0.5">Do you want to save this session to Analytics?</p>
+      </div>
+      <div class="grid grid-cols-2 gap-2.5 mb-5">
+        <div class="bg-zinc-800/70 p-3 rounded-xl border border-zinc-700/60">
+          <div class="text-xs uppercase text-slate-400 font-bold">Accuracy</div>
+          <div id="stopModalAcc" class="mono text-2xl font-black text-emerald-400 mt-0.5">100%</div>
+        </div>
+        <div class="bg-zinc-800/70 p-3 rounded-xl border border-zinc-700/60">
+          <div class="text-xs uppercase text-slate-400 font-bold">Notes</div>
+          <div id="stopModalNotes" class="mono text-2xl font-black text-white mt-0.5">0</div>
+          <div id="stopModalDuration" class="text-xs text-slate-400">00:00</div>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <button id="btnStopDiscardNo" type="button" class="py-3 rounded-xl text-sm font-extrabold bg-zinc-800 hover:bg-rose-600/20 hover:text-rose-300 text-slate-200 border border-zinc-700 transition">
+          No, Discard
+        </button>
+        <button id="btnStopSaveYes" type="button" class="py-3 rounded-xl text-sm font-extrabold bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg transition">
+          Yes, Save
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Session Confirmation Prompt Modal -->
+  <div id="deleteSessionConfirmModal" class="hidden fixed inset-0 z-50 bg-zinc-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-zinc-900 border border-zinc-700 rounded-2xl max-w-sm w-full p-5 shadow-2xl">
+      <h3 class="text-lg font-extrabold text-white">Delete Session Data?</h3>
+      <p id="deleteModalMessage" class="text-xs sm:text-sm text-slate-300 mt-1.5 mb-5">
+        Are you sure you want to delete this session? This action cannot be undone.
+      </p>
+      <div class="grid grid-cols-2 gap-3">
+        <button id="btnDeleteCancel" type="button" class="py-2.5 rounded-xl text-sm font-extrabold bg-zinc-800 hover:bg-zinc-700 text-slate-200 border border-zinc-700 transition">
+          Cancel
+        </button>
+        <button id="btnDeleteConfirmYes" type="button" class="py-2.5 rounded-xl text-sm font-extrabold bg-rose-600 hover:bg-rose-500 text-white shadow-lg transition">
+          Yes, Delete
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toastBanner" class="hidden fixed bottom-4 right-4 z-50 bg-zinc-900 border border-indigo-500/60 text-white px-4 py-2.5 rounded-xl shadow-2xl text-xs font-bold"></div>
+
+  <script>
+    // ============================================================================
+    // 1. MUSIC THEORY, CHROMATIC KEYS, 7 MODES, CUSTOM SCALES & CHORD DETECTOR
+    // ============================================================================
+    const STRING_OPEN_MIDI = { 1: 76, 2: 71, 3: 67, 4: 62, 5: 57, 6: 52 };
+    const LETTERS = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
+    const LETTER_SEMITONES = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
+
+    const CHROMATIC_KEYS = [
+      { id: 'C',  label: 'C' },
+      { id: 'C#', label: 'C♯' },
+      { id: 'D',  label: 'D' },
+      { id: 'Eb', label: 'E♭' },
+      { id: 'E',  label: 'E' },
+      { id: 'F',  label: 'F' },
+      { id: 'F#', label: 'F♯' },
+      { id: 'G',  label: 'G' },
+      { id: 'Ab', label: 'A♭' },
+      { id: 'A',  label: 'A' },
+      { id: 'Bb', label: 'B♭' },
+      { id: 'B',  label: 'B' }
+    ];
+
+    const ALL_12_DEGREES = ['I', '♭II', 'II', '♭III', 'III', 'IV', '♯IV', 'V', '♭VI', 'VI', '♭VII', 'VII'];
+
+    const MODES = {
+      'Ionian': {
+        intervals: [0, 2, 4, 5, 7, 9, 11],
+        degrees: ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII'],
+        label: 'Ionian'
+      },
+      'Dorian': {
+        intervals: [0, 2, 3, 5, 7, 9, 10],
+        degrees: ['I', 'II', '♭III', 'IV', 'V', 'VI', '♭VII'],
+        label: 'Dorian'
+      },
+      'Phrygian': {
+        intervals: [0, 1, 3, 5, 7, 8, 10],
+        degrees: ['I', '♭II', '♭III', 'IV', 'V', '♭VI', '♭VII'],
+        label: 'Phrygian'
+      },
+      'Lydian': {
+        intervals: [0, 2, 4, 6, 7, 9, 11],
+        degrees: ['I', 'II', 'III', '♯IV', 'V', 'VI', 'VII'],
+        label: 'Lydian'
+      },
+      'Mixolydian': {
+        intervals: [0, 2, 4, 5, 7, 9, 10],
+        degrees: ['I', 'II', 'III', 'IV', 'V', 'VI', '♭VII'],
+        label: 'Mixo.'
+      },
+      'Aeolian': {
+        intervals: [0, 2, 3, 5, 7, 8, 10],
+        degrees: ['I', 'II', '♭III', 'IV', 'V', '♭VI', '♭VII'],
+        label: 'Aeolian'
+      },
+      'Locrian': {
+        intervals: [0, 1, 3, 5, 6, 8, 10],
+        degrees: ['I', '♭II', '♭III', 'IV', '♭V', '♭VI', '♭VII'],
+        label: 'Locrian'
+      },
+      'Chromatic': {
+        intervals: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+        degrees: ['I', '♭II', 'II', '♭III', 'III', 'IV', '♯IV', 'V', '♭VI', 'VI', '♭VII', 'VII'],
+        label: 'Chro.'
+      },
+      'Custom': {
+        intervals: [0, 2, 4, 7, 9],
+        degrees: ['I', 'II', 'III', 'V', 'VI'],
+        label: 'Custom'
+      }
+    };
+
+    const INTERVAL_COLORS = [
+      { bg: 'bg-amber-500',   text: 'text-slate-950', border: 'border-amber-300',   ring: 'ring-amber-400' },
+      { bg: 'bg-sky-500',     text: 'text-slate-950', border: 'border-sky-300',     ring: 'ring-sky-400' },
+      { bg: 'bg-emerald-500', text: 'text-slate-950', border: 'border-emerald-300', ring: 'ring-emerald-400' },
+      { bg: 'bg-violet-500',  text: 'text-white',     border: 'border-violet-300',  ring: 'ring-violet-400' },
+      { bg: 'bg-rose-500',    text: 'text-white',     border: 'border-rose-300',    ring: 'ring-rose-400' },
+      { bg: 'bg-teal-400',    text: 'text-slate-950', border: 'border-teal-200',    ring: 'ring-teal-300' },
+      { bg: 'bg-fuchsia-500', text: 'text-white',     border: 'border-fuchsia-300', ring: 'ring-fuchsia-400' },
+      { bg: 'bg-orange-500',  text: 'text-slate-950', border: 'border-orange-300',  ring: 'ring-orange-400' },
+      { bg: 'bg-lime-400',    text: 'text-slate-950', border: 'border-lime-200',    ring: 'ring-lime-300' },
+      { bg: 'bg-cyan-400',    text: 'text-slate-950', border: 'border-cyan-200',    ring: 'ring-cyan-300' },
+      { bg: 'bg-pink-500',    text: 'text-white',     border: 'border-pink-300',    ring: 'ring-pink-400' },
+      { bg: 'bg-indigo-500',  text: 'text-white',     border: 'border-indigo-300',  ring: 'ring-indigo-400' }
+    ];
+
+    const CHROMATIC_SHARP_NAMES = ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'];
+
+    function parseNoteSpelling(noteStr) {
+      const letter = noteStr.charAt(0).toUpperCase();
+      const acc = noteStr.slice(1);
+      let semi = LETTER_SEMITONES[letter];
+      if (acc === '#') semi = (semi + 1) % 12;
+      if (acc === 'b') semi = (semi + 11) % 12;
+      return { letter, accidental: acc, name: letter + acc, pitchClass: semi };
+    }
+
+    function formatNoteDisplay(name) {
+      if (!name) return '';
+      return name.replace('#', '♯').replace('b', '♭');
+    }
+
+    function computeMidi(letter, accidental, octave) {
+      let base = (octave + 1) * 12 + LETTER_SEMITONES[letter];
+      if (accidental === '#') base += 1;
+      if (accidental === 'b') base -= 1;
+      return base;
+    }
+
+    function midiToNoteNameWithOctave(midi) {
+      const oct = Math.floor(midi / 12) - 1;
+      const pc = ((midi % 12) + 12) % 12;
+      return `${formatNoteDisplay(CHROMATIC_SHARP_NAMES[pc])}${oct}`;
+    }
+
+    // ============================================================================
+    // 2. APPLICATION STATE & CUSTOM SCALES STORAGE
+    // ============================================================================
+    const STORAGE_KEY = 'fretgym_user_sessions_v2';
+    const CUSTOM_SCALES_KEY = 'fretgym_custom_scales_v1';
+
+    const state = {
+      rootKey: 'C',
+      mode: 'Ionian',
+      customScaleName: '',
+      customSemitones: new Set([0, 2, 4, 7, 9]), // Default Major Pentatonic when Custom is clicked
+      minFret: 0,
+      maxFret: 24,
+      accidentalStyle: 'inline',
+      activeStrings: [1, 2, 3, 4, 5, 6],
+
+      // Fretboard Map UI state
+      mapDisplayMode: 'notes', // 'notes' | 'intervals'
+      selectedIntervals: new Set([0, 1, 2, 3, 4, 5, 6]),
+
+      // Quiz stream
+      questions: [],
+      activeIndex: 0,
+      selectedAccidental: '',
+      pendingNoteAnswer: null,
+      pendingFretAnswer: null,
+
+      // Session tracking
+      sessionActive: false,
+      sessionStartedAtIso: null,
+      elapsedSec: 0,
+      isPaused: false,
+      noteStartTimeMs: Date.now(),
+      notesAttempted: 0,
+      notesBothCorrect: 0,
+      notesNameCorrect: 0,
+      notesFretCorrect: 0,
+      reactionTimesSec: [],
+
+      // Analytics UI state
+      statPeriod: 'daily', // 'daily' | 'weekly' | 'monthly' | 'yearly' | 'custom'
+      statMetric: 'accuracy',
+      visibleLogCount: 5
+    };
+
+    function loadCustomScales() {
+      try {
+        const raw = localStorage.getItem(CUSTOM_SCALES_KEY);
+        return raw ? JSON.parse(raw) : [];
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function saveCustomScalesList(list) {
+      try {
+        localStorage.setItem(CUSTOM_SCALES_KEY, JSON.stringify(list));
+      } catch (e) {}
+    }
+
+    function getModeSpellings(rootKey, modeName) {
+      const rootParsed = parseNoteSpelling(rootKey);
+
+      if (modeName === 'Custom') {
+        const sortedSemis = Array.from(state.customSemitones).sort((a, b) => a - b);
+        const activeSemis = sortedSemis.length > 0 ? sortedSemis : [0];
+        return activeSemis.map((semiOffset, idx) => {
+          const pc = (rootParsed.pitchClass + semiOffset) % 12;
+          const noteStr = CHROMATIC_SHARP_NAMES[pc];
+          const parsed = parseNoteSpelling(noteStr);
+          return {
+            ...parsed,
+            semitoneOffset: semiOffset,
+            degreeIndex: idx,
+            degreeLabel: ALL_12_DEGREES[semiOffset]
+          };
+        });
+      }
+
+      const modeObj = MODES[modeName] || MODES['Ionian'];
+
+      if (modeName === 'Chromatic') {
+        return modeObj.intervals.map((semiOffset, idx) => {
+          const pc = (rootParsed.pitchClass + semiOffset) % 12;
+          const noteStr = CHROMATIC_SHARP_NAMES[pc];
+          const parsed = parseNoteSpelling(noteStr);
+          return {
+            ...parsed,
+            semitoneOffset: semiOffset,
+            degreeIndex: idx,
+            degreeLabel: modeObj.degrees[idx]
+          };
+        });
+      }
+
+      const ENHARMONIC_ROOT_CANDIDATES = {
+        0: ['C'],
+        1: ['Db', 'C#'],
+        2: ['D'],
+        3: ['Eb', 'D#'],
+        4: ['E'],
+        5: ['F'],
+        6: ['F#', 'Gb'],
+        7: ['G'],
+        8: ['Ab', 'G#'],
+        9: ['A'],
+        10: ['Bb', 'A#'],
+        11: ['B', 'Cb']
+      };
+      const intervals = modeObj.intervals;
+      const rawCandidates = ENHARMONIC_ROOT_CANDIDATES[rootParsed.pitchClass] || [rootKey];
+      // Prefer the user's chosen root spelling first if it produces a valid 7-letter scale without double accidentals
+      const orderedCandidates = [
+        rootKey,
+        ...rawCandidates.filter(c => c !== rootKey)
+      ];
+
+      function buildDiatonicCandidate(candRootStr) {
+        const cParsed = parseNoteSpelling(candRootStr);
+        const cLetterIdx = LETTERS.indexOf(cParsed.letter);
+        const notes = [];
+        let doubleAccCount = 0;
+        let whiteKeyAccCount = 0;
+        for (let i = 0; i < 7; i++) {
+          const targetLetter = LETTERS[(cLetterIdx + i) % 7];
+          const naturalSemi = LETTER_SEMITONES[targetLetter];
+          const targetSemi = (cParsed.pitchClass + intervals[i]) % 12;
+          const diff = (targetSemi - naturalSemi + 12) % 12;
+          let acc = '';
+          if (diff === 0) acc = '';
+          else if (diff === 1) acc = '#';
+          else if (diff === 11) acc = 'b';
+          else {
+            doubleAccCount += 1;
+            acc = diff === 2 ? '##' : 'bb';
+          }
+          const fullName = targetLetter + acc;
+          if (fullName === 'E#' || fullName === 'B#' || fullName === 'Cb' || fullName === 'Fb') {
+            whiteKeyAccCount += 1;
+          }
+          notes.push({
+            letter: targetLetter,
+            accidental: acc,
+            name: fullName,
+            pitchClass: targetSemi,
+            semitoneOffset: intervals[i],
+            degreeIndex: i,
+            degreeLabel: modeObj.degrees[i]
+          });
+        }
+        return { notes, doubleAccCount, whiteKeyAccCount };
+      }
+
+      const evaluated = orderedCandidates.map(c => buildDiatonicCandidate(c));
+      evaluated.sort((a, b) => (a.doubleAccCount - b.doubleAccCount) || (a.whiteKeyAccCount - b.whiteKeyAccCount));
+      return evaluated[0].notes;
+    }
+
+    // Requirement #4: Automatically compute Treble Clef range from Fret Range & Active Strings
+    function getAutoClefBounds() {
+      let lowMidi = 999;
+      let highMidi = 0;
+      for (const s of state.activeStrings) {
+        const open = STRING_OPEN_MIDI[s];
+        lowMidi = Math.min(lowMidi, open + state.minFret);
+        highMidi = Math.max(highMidi, open + state.maxFret);
+      }
+      if (lowMidi > highMidi) {
+        lowMidi = 52;
+        highMidi = 100;
+      }
+      return {
+        lowMidi,
+        highMidi,
+        lowLabel: midiToNoteNameWithOctave(lowMidi),
+        highLabel: midiToNoteNameWithOctave(highMidi)
+      };
+    }
+
+    // Requirement #6: Detect Chord Name from selected intervals on Fretboard Map
+    const CHORD_FORMULAS = [
+      { intervals: [0, 4, 7],             suffix: 'Major' },
+      { intervals: [0, 3, 7],             suffix: 'Minor' },
+      { intervals: [0, 3, 6],             suffix: 'dim' },
+      { intervals: [0, 4, 8],             suffix: 'aug' },
+      { intervals: [0, 5, 7],             suffix: 'sus4' },
+      { intervals: [0, 2, 7],             suffix: 'sus2' },
+      { intervals: [0, 7],                suffix: '5 (Power Chord)' },
+      { intervals: [0, 4, 7, 11],         suffix: 'Maj7' },
+      { intervals: [0, 3, 7, 10],         suffix: 'm7' },
+      { intervals: [0, 4, 7, 10],         suffix: '7' },
+      { intervals: [0, 3, 6, 10],         suffix: 'm7♭5' },
+      { intervals: [0, 3, 6, 9],          suffix: 'dim7' },
+      { intervals: [0, 3, 7, 11],         suffix: 'm(Maj7)' },
+      { intervals: [0, 4, 7, 9],          suffix: '6' },
+      { intervals: [0, 3, 7, 9],          suffix: 'm6' },
+      { intervals: [0, 2, 4, 7],          suffix: 'add9' },
+      { intervals: [0, 2, 3, 7],          suffix: 'm(add9)' },
+      { intervals: [0, 2, 4, 7, 11],      suffix: 'Maj9' },
+      { intervals: [0, 2, 3, 7, 10],      suffix: 'm9' },
+      { intervals: [0, 2, 4, 7, 10],      suffix: '9' },
+      { intervals: [0, 4, 7, 9, 10],      suffix: '13' },
+      { intervals: [0, 2, 4, 7, 9],       suffix: 'Major Pentatonic' },
+      { intervals: [0, 3, 5, 7, 10],      suffix: 'Minor Pentatonic' }
+    ];
+
+    function detectChordFromSelectedIntervals() {
+      const spellings = getModeSpellings(state.rootKey, state.mode);
+      const selected = spellings.filter((_, idx) => state.selectedIntervals.has(idx));
+
+      if (selected.length === 0) return 'None selected';
+      if (selected.length === 1) {
+        return `${formatNoteDisplay(selected[0].name)} Note (${selected[0].degreeLabel})`;
+      }
+
+      if (selected.length === 2) {
+        const diff = (selected[1].pitchClass - selected[0].pitchClass + 12) % 12;
+        const dyadNames = {
+          1: 'Minor 2nd', 2: 'Major 2nd', 3: 'Minor 3rd', 4: 'Major 3rd',
+          5: 'Perfect 4th', 6: 'Tritone', 7: '5 (Power Chord)',
+          8: 'Minor 6th', 9: 'Major 6th', 10: 'Minor 7th', 11: 'Major 7th'
+        };
+        const label = dyadNames[diff] || 'Dyad';
+        return `${formatNoteDisplay(selected[0].name)} ${label} (${selected.map(s => formatNoteDisplay(s.name)).join(' · ')})`;
+      }
+
+      // Check each selected note as potential chord root ( prioritizes first selected note / tonic )
+      for (let rIdx = 0; rIdx < selected.length; rIdx++) {
+        const candidateRoot = selected[rIdx];
+        const relSet = Array.from(new Set(
+          selected.map(s => (s.pitchClass - candidateRoot.pitchClass + 12) % 12)
+        )).sort((a, b) => a - b);
+
+        for (const formula of CHORD_FORMULAS) {
+          if (formula.intervals.length === relSet.length &&
+              formula.intervals.every((v, i) => v === relSet[i])) {
+            const notesList = selected.map(s => formatNoteDisplay(s.name)).join(' · ');
+            return `${formatNoteDisplay(candidateRoot.name)} ${formula.suffix} (${notesList})`;
+          }
+        }
+      }
+
+      if (selected.length >= 7) {
+        const modeTitle = state.mode === 'Custom' && state.customScaleName ? state.customScaleName : MODES[state.mode].label;
+        return `${formatNoteDisplay(state.rootKey)} ${modeTitle} Scale`;
+      }
+
+      return `${selected.map(s => formatNoteDisplay(s.name)).join(' · ')}`;
+    }
+
+    // ============================================================================
+    // 3. KARPLUS-STRONG ACOUSTIC GUITAR SYNTHESIZER
+    // ============================================================================
+    let audioCtx = null;
+    let soundEnabled = true;
+
+    function playGuitarTone(writtenMidi, isError = false) {
+      if (!soundEnabled) return;
+      try {
+        if (!audioCtx) {
+          const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+          audioCtx = new AudioContextClass();
+        }
+        if (audioCtx.state === 'suspended') {
+          audioCtx.resume();
+        }
+        const now = audioCtx.currentTime;
+
+        if (isError) {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(115, now);
+          osc.frequency.exponentialRampToValueAtTime(75, now + 0.22);
+          gain.gain.setValueAtTime(0.25, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.24);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(now);
+          osc.stop(now + 0.25);
+          return;
+        }
+
+        const soundingMidi = writtenMidi - 12;
+        const freq = 440 * Math.pow(2, (soundingMidi - 69) / 12);
+        const sampleRate = audioCtx.sampleRate;
+        const durationSec = 1.65;
+        const totalSamples = Math.floor(sampleRate * durationSec);
+        const period = Math.max(2, Math.round(sampleRate / freq));
+
+        const buffer = audioCtx.createBuffer(1, totalSamples, sampleRate);
+        const data = buffer.getChannelData(0);
+
+        const delayLine = new Float32Array(period);
+        let prev = 0;
+        for (let i = 0; i < period; i++) {
+          const white = Math.random() * 2 - 1;
+          delayLine[i] = 0.55 * white + 0.45 * prev;
+          prev = delayLine[i];
+        }
+
+        const damping = Math.min(0.996, 0.988 + (soundingMidi - 40) * 0.00018);
+        let ptr = 0;
+        for (let i = 0; i < totalSamples; i++) {
+          const nextPtr = (ptr + 1) % period;
+          const currentSample = delayLine[ptr];
+          data[i] = currentSample;
+          delayLine[ptr] = damping * (0.52 * currentSample + 0.48 * delayLine[nextPtr]);
+          ptr = nextPtr;
+        }
+
+        const source = audioCtx.createBufferSource();
+        source.buffer = buffer;
+
+        const bodyResonanceLow = audioCtx.createBiquadFilter();
+        bodyResonanceLow.type = 'peaking';
+        bodyResonanceLow.frequency.setValueAtTime(102, now);
+        bodyResonanceLow.Q.setValueAtTime(2.2, now);
+        bodyResonanceLow.gain.setValueAtTime(5.5, now);
+
+        const bodyResonanceMid = audioCtx.createBiquadFilter();
+        bodyResonanceMid.type = 'peaking';
+        bodyResonanceMid.frequency.setValueAtTime(235, now);
+        bodyResonanceMid.Q.setValueAtTime(1.8, now);
+        bodyResonanceMid.gain.setValueAtTime(4.0, now);
+
+        const warmthFilter = audioCtx.createBiquadFilter();
+        warmthFilter.type = 'lowpass';
+        warmthFilter.frequency.setValueAtTime(3600, now);
+
+        const masterGain = audioCtx.createGain();
+        masterGain.gain.setValueAtTime(0.45, now);
+        masterGain.gain.exponentialRampToValueAtTime(0.001, now + durationSec);
+
+        source.connect(bodyResonanceLow);
+        bodyResonanceLow.connect(bodyResonanceMid);
+        bodyResonanceMid.connect(warmthFilter);
+        warmthFilter.connect(masterGain);
+        masterGain.connect(audioCtx.destination);
+
+        source.start(now);
+      } catch (e) {}
+    }
+
+    // ============================================================================
+    // 4. QUESTION GENERATOR & SVG RENDERER
+    // ============================================================================
+    function buildValidQuestionPool() {
+      const { lowMidi, highMidi } = getAutoClefBounds();
+      const modeSpellings = getModeSpellings(state.rootKey, state.mode);
+      const pool = [];
+
+      for (let oct = 2; oct <= 7; oct++) {
+        for (const sp of modeSpellings) {
+          const lIdx = LETTERS.indexOf(sp.letter);
+          const diatonicStep = oct * 7 + lIdx; // E4 = 30
+          const midi = computeMidi(sp.letter, sp.accidental, oct);
+          if (midi < lowMidi || midi > highMidi) continue;
+
+          for (const strNum of state.activeStrings) {
+            const openMidi = STRING_OPEN_MIDI[strNum];
+            const fret = midi - openMidi;
+            if (fret >= state.minFret && fret <= state.maxFret && fret >= 0 && fret <= 24) {
+              pool.push({
+                letter: sp.letter,
+                accidental: sp.accidental,
+                noteName: sp.name,
+                octave: oct,
+                midi,
+                diatonicStep,
+                stringNum: strNum,
+                fret,
+                degreeIndex: sp.degreeIndex,
+                degreeLabel: sp.degreeLabel
+              });
+            }
+          }
+        }
+      }
+      return pool;
+    }
+
+    function generateNextQuestion(prevQuestion) {
+      const pool = buildValidQuestionPool();
+      if (pool.length === 0) {
+        return {
+          id: 'q_' + Math.random().toString(36).slice(2, 9),
+          letter: 'F',
+          accidental: '',
+          noteName: 'F',
+          octave: 4,
+          midi: 65,
+          diatonicStep: 31,
+          stringNum: 4,
+          fret: 3,
+          userNote: null,
+          userFret: null,
+          status: 'pending'
+        };
+      }
+
+      let candidates = pool;
+      if (prevQuestion && pool.length > 1) {
+        candidates = pool.filter(c => !(c.midi === prevQuestion.midi && c.stringNum === prevQuestion.stringNum));
+      }
+      const chosen = candidates[Math.floor(Math.random() * candidates.length)];
+      return {
+        id: 'q_' + Math.random().toString(36).slice(2, 9),
+        ...chosen,
+        userNote: null,
+        userFret: null,
+        status: 'pending'
+      };
+    }
+
+    function initQuestionStream() {
+      state.questions = [];
+      state.activeIndex = 0;
+      state.pendingNoteAnswer = null;
+      state.pendingFretAnswer = null;
+      state.selectedAccidental = '';
+
+      while (state.questions.length < 14) {
+        const prev = state.questions[state.questions.length - 1];
+        state.questions.push(generateNextQuestion(prev));
+      }
+
+      state.noteStartTimeMs = Date.now();
+      updateDockUI();
+      renderNotationSvg();
+      scrollToActiveNote();
+    }
+
+    const GCLEF_SVG_PATH = 'M15.1 -38.4Q14.4 -41.0 14.0 -43.5Q13.5 -46.0 13.5 -48.6Q13.5 -50.8 13.8 -52.8Q14.2 -54.8 14.7 -56.5Q15.4 -58.4 16.4 -60.1Q17.4 -61.8 18.5 -62.9Q19.6 -64.0 20.5 -64.0Q21.6 -64.0 23.7 -60.0Q24.7 -57.9 25.2 -55.5Q25.6 -53.1 25.6 -50.4Q25.6 -46.9 24.7 -43.6Q23.8 -40.2 22.1 -37.2Q20.3 -34.2 17.9 -32.0L19.5 -23.9Q20.3 -24.0 20.7 -24.0Q21.2 -24.1 21.5 -24.1Q24.4 -24.1 26.7 -22.4Q29.0 -20.8 30.4 -18.1Q31.7 -15.4 31.7 -12.2Q31.7 -8.5 29.8 -5.5Q27.9 -2.6 24.1 -1.2Q24.4 -0.4 25.5 5.6Q25.8 7.1 26.0 7.9Q26.1 8.7 26.2 9.4Q26.2 10.0 26.2 10.8Q26.2 13.2 25.0 15.1Q23.9 17.0 21.9 18.0Q19.9 19.1 17.4 19.1Q14.9 19.1 13.0 18.2Q11.1 17.2 10.0 15.6Q8.9 13.9 8.9 11.8Q8.9 9.5 10.2 7.9Q11.4 6.4 13.8 6.4Q15.8 6.4 17.1 7.8Q18.3 9.3 18.3 11.3Q18.3 13.1 17.1 14.4Q15.9 15.6 14.0 15.6H13.5Q14.8 17.5 17.5 17.5Q20.8 17.5 22.7 15.4Q24.5 13.2 24.5 9.8Q24.5 9.0 24.3 7.7Q24.1 6.3 23.7 4.4Q23.2 2.4 22.9 1.2Q22.7 -0.0 22.6 -0.6Q20.9 -0.1 18.7 -0.1Q14.6 -0.1 10.7 -2.5Q6.8 -4.9 4.6 -8.8Q2.4 -12.8 2.4 -17.3Q2.4 -21.6 4.4 -25.4Q6.3 -29.2 9.2 -32.4Q12.1 -35.6 15.1 -38.4ZM16.4 -39.6Q17.5 -40.2 18.7 -41.8Q20.0 -43.3 21.1 -45.4Q22.3 -47.4 23.0 -49.4Q23.7 -51.5 23.7 -53.1Q23.7 -54.8 23.2 -55.8Q22.7 -56.8 21.4 -56.8Q20.2 -56.8 19.1 -55.8Q18.0 -54.7 17.2 -53.0Q16.4 -51.2 15.9 -49.1Q15.4 -46.9 15.4 -44.6Q15.4 -43.1 15.7 -41.9Q16.0 -40.6 16.4 -39.6ZM19.1 -18.2Q17.8 -17.9 16.7 -17.0Q15.5 -16.0 14.8 -14.7Q14.1 -13.4 14.1 -11.9Q14.1 -10.7 14.7 -9.4Q15.4 -8.2 16.3 -7.4Q16.9 -6.8 17.5 -6.5Q18.2 -6.2 18.2 -5.9Q18.2 -5.8 17.8 -5.6Q15.9 -6.0 14.5 -7.2Q13.0 -8.4 12.2 -10.2Q11.3 -11.9 11.3 -13.8Q11.3 -15.8 12.2 -17.8Q13.0 -19.7 14.5 -21.2Q16.0 -22.8 18.0 -23.5L16.6 -30.8Q11.0 -26.3 8.4 -21.9Q5.8 -17.6 5.8 -13.3Q5.8 -10.2 7.4 -7.5Q9.0 -4.8 11.9 -3.1Q14.7 -1.5 18.2 -1.5Q19.2 -1.5 20.2 -1.7Q21.2 -1.9 22.3 -2.2ZM23.8 -2.6Q28.5 -4.7 28.5 -10.9Q28.5 -13.0 27.4 -14.7Q26.4 -16.4 24.6 -17.4Q22.8 -18.4 20.6 -18.4Z';
+    const ACCIDENTAL_SVG_PATHS = {
+      '#': 'M6.3 2.7 3.6 3.9V8.8H2.3V4.4L-2.3 6.6V11.5H-3.6V7.2L-6.3 8.5V6.3L-3.6 5.0V-1.9L-6.3 -0.5V-2.7L-3.6 -4.0V-8.5H-2.3V-4.6L2.3 -6.8V-11.5H3.6V-7.3L6.3 -8.6V-6.4L3.6 -5.1V1.8L6.3 0.5ZM2.3 2.3V-4.6L-2.3 -2.4V4.5Z',
+      'b': 'M-3.9 -13.1H-2.7V-2.0Q-1.8 -3.4 -0.8 -4.1Q0.2 -4.9 1.1 -4.9Q2.4 -4.9 3.2 -4.1Q3.9 -3.3 3.9 -1.9Q3.9 0.0 2.9 1.4Q2.2 2.4 1.1 3.1Q0.0 3.7 -1.1 4.1Q-2.3 4.5 -3.3 4.5H-3.9ZM-2.7 -0.8V3.6Q-1.9 3.6 -0.7 2.9Q0.6 2.2 1.3 1.0Q2.1 -0.1 2.1 -1.5Q2.1 -2.4 1.8 -2.9Q1.6 -3.4 0.8 -3.4Q-0.1 -3.4 -1.1 -2.7Q-2.0 -1.9 -2.7 -0.8Z',
+      'nat': 'M3.8 9.3H2.4V4.6L-3.8 7.5V-9.3H-2.4V-5.1L3.8 -8.0ZM2.4 2.3V-5.0L-2.4 -2.7V4.6Z'
+    };
+
+    function renderAccidentalGlyph(type, x, y, color = '#0f172a', scale = 1.0) {
+      const d = ACCIDENTAL_SVG_PATHS[type];
+      if (!d) return '';
+      return `<path d="${d}" transform="translate(${x}, ${y}) scale(${scale})" fill="${color}" />`;
+    }
+
+    // E4 (bottom line of treble staff, diatonicStep = 30) is anchored at y = 186.
+    // Every diatonic step (line-to-space) is 6px; adjacent staff lines (2 steps) are 12px apart:
+    //   Line 1 (bottom): E4 (step 30) -> y = 186
+    //   Space 1:         F4 (step 31) -> y = 180
+    //   Line 2:          G4 (step 32) -> y = 174
+    //   Space 2:         A4 (step 33) -> y = 168
+    //   Line 3 (middle): B4 (step 34) -> y = 162
+    //   Space 3:         C5 (step 35) -> y = 156
+    //   Line 4:          D5 (step 36) -> y = 150
+    //   Space 4 (top):   E5 (step 37) -> y = 144
+    //   Line 5 (top):    F5 (step 38) -> y = 138
+    //   Ledger lines above staff: A5(40)=126, C6(42)=114, E6(44)=102, G6(46)=90, B6(48)=78, D7(50)=66, E7(51)=60
+    //   Ledger lines below staff: C4(28)=198, A3(26)=210, F3(24)=222, E3(23)=228
+    function stepToStaffY(diatonicStep) {
+      return 186 - (diatonicStep - 30) * 6;
+    }
+
+    function stringToTabY(stringNum) {
+      return 264 + (stringNum - 1) * 18;
+    }
+
+    function isNoteInputCorrect(userNoteStr, question) {
+      if (!userNoteStr || !question) return false;
+      if (userNoteStr === question.noteName) return true;
+      // Also accept natural enharmonic equivalent when theoretical scale spelling is E#, B#, Cb, or Fb
+      // or when in Chromatic / Custom mode where enharmonic equivalents (e.g. D# vs Eb) share the same pitch class
+      const uParsed = parseNoteSpelling(userNoteStr);
+      const qParsed = parseNoteSpelling(question.noteName);
+      if (uParsed.pitchClass === qParsed.pitchClass) {
+        if (['E#', 'B#', 'Cb', 'Fb'].includes(question.noteName) ||
+            state.mode === 'Chromatic' || state.mode === 'Custom') {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    function renderNotationSvg() {
+      const svg = document.getElementById('notationSvg');
+      if (!svg) return;
+
+      // Key signature accidentals in standard circle-of-fifths order and standard treble staff positions
+      const SHARP_KEYSIG_STEPS = { F: 38, C: 35, G: 39, D: 36, A: 33, E: 37, B: 34 };
+      const FLAT_KEYSIG_STEPS  = { B: 34, E: 37, A: 33, D: 36, G: 32, C: 35, F: 31 };
+      const SHARP_ORDER = ['F', 'C', 'G', 'D', 'A', 'E', 'B'];
+      const FLAT_ORDER  = ['B', 'E', 'A', 'D', 'G', 'C', 'F'];
+
+      let keySigItems = [];
+      if (state.accidentalStyle === 'keysig' && state.mode !== 'Chromatic' && state.mode !== 'Custom') {
+        const modeSpellings = getModeSpellings(state.rootKey, state.mode);
+        const alteredMap = new Map();
+        modeSpellings.forEach(sp => {
+          if (sp.accidental === '#' || sp.accidental === 'b') {
+            alteredMap.set(sp.letter, sp.accidental);
+          }
+        });
+        const isSharpKey = Array.from(alteredMap.values()).includes('#');
+        const orderList = isSharpKey ? SHARP_ORDER : FLAT_ORDER;
+        const stepLookup = isSharpKey ? SHARP_KEYSIG_STEPS : FLAT_KEYSIG_STEPS;
+        orderList.forEach(letter => {
+          if (alteredMap.has(letter)) {
+            keySigItems.push({
+              letter,
+              acc: alteredMap.get(letter),
+              step: stepLookup[letter]
+            });
+          }
+        });
+      }
+
+      const leftMargin = 115 + Math.max(0, keySigItems.length * 10);
+      const noteSpacing = 96;
+      const totalNotes = state.questions.length;
+      const svgWidth = Math.max(1150, leftMargin + totalNotes * noteSpacing + 80);
+      svg.setAttribute('width', svgWidth);
+      svg.setAttribute('viewBox', `0 0 ${svgWidth} 386`);
+
+      let html = '';
+
+      // Left System Brace Line
+      html += `<line x1="24" y1="138" x2="24" y2="354" stroke="#1e293b" stroke-width="2.5" />`;
+      // Right End Barlines
+      html += `<line x1="${svgWidth - 24}" y1="138" x2="${svgWidth - 24}" y2="186" stroke="#1e293b" stroke-width="1.5" />`;
+      html += `<line x1="${svgWidth - 19}" y1="138" x2="${svgWidth - 19}" y2="186" stroke="#1e293b" stroke-width="3.5" />`;
+      html += `<line x1="${svgWidth - 24}" y1="264" x2="${svgWidth - 24}" y2="354" stroke="#1e293b" stroke-width="1.5" />`;
+      html += `<line x1="${svgWidth - 19}" y1="264" x2="${svgWidth - 19}" y2="354" stroke="#1e293b" stroke-width="3.5" />`;
+
+      // 5 Treble Staff Lines: F5(138), D5(150), B4(162), G4(174), E4(186)
+      for (let i = 0; i < 5; i++) {
+        const y = 138 + i * 12;
+        html += `<line x1="24" y1="${y}" x2="${svgWidth - 18}" y2="${y}" stroke="#334155" stroke-width="1.45" />`;
+      }
+
+      // 6 Guitar TAB Lines (labeled 1 to 6)
+      for (let s = 1; s <= 6; s++) {
+        const y = stringToTabY(s);
+        html += `<line x1="24" y1="${y}" x2="${svgWidth - 18}" y2="${y}" stroke="#475569" stroke-width="1.3" />`;
+        html += `<text x="12" y="${y + 4}" font-size="12" font-weight="800" fill="#475569" text-anchor="middle">${s}</text>`;
+      }
+
+      // Precision Engraved Vector Treble Clef (anchored at E4 = 186 so G-curl wraps G4 = 174)
+      html += `<path d="${GCLEF_SVG_PATH}" transform="translate(30, 186)" fill="#0f172a" />`;
+
+      // Key Signature near Clef when in Key Signature mode
+      keySigItems.forEach((item, idx) => {
+        const kx = 70 + idx * 10;
+        const ky = stepToStaffY(item.step);
+        html += renderAccidentalGlyph(item.acc, kx, ky, '#0f172a', 0.92);
+      });
+
+      // TAB Header Letters
+      html += `
+        <text x="44" y="290" font-size="21" font-weight="900" font-family="Inter, sans-serif" fill="#0f172a" text-anchor="middle">T</text>
+        <text x="44" y="316" font-size="21" font-weight="900" font-family="Inter, sans-serif" fill="#0f172a" text-anchor="middle">A</text>
+        <text x="44" y="342" font-size="21" font-weight="900" font-family="Inter, sans-serif" fill="#0f172a" text-anchor="middle">B</text>
+      `;
+
+      state.questions.forEach((q, idx) => {
+        const cx = leftMargin + idx * noteSpacing;
+        // Exact, unclamped vertical position for every note from E3 (step 23) to E7 (step 51)
+        const ny = stepToStaffY(q.diatonicStep);
+        const ty = stringToTabY(q.stringNum);
+        const isCurrent = idx === state.activeIndex;
+        const isAnswered = q.status === 'correct' || q.status === 'wrong';
+
+        if (idx > 0 && idx % 4 === 0) {
+          const bx = cx - noteSpacing / 2;
+          html += `<line x1="${bx}" y1="138" x2="${bx}" y2="186" stroke="#94a3b8" stroke-width="1" stroke-dasharray="2,2" />`;
+          html += `<line x1="${bx}" y1="264" x2="${bx}" y2="354" stroke="#94a3b8" stroke-width="1" stroke-dasharray="2,2" />`;
+        }
+
+        // Dotted unfilled highlight box
+        if (isCurrent) {
+          html += `
+            <rect x="${cx - 38}" y="6" width="76" height="372" rx="10"
+              fill="none" stroke="#4f46e5" stroke-width="2.4" stroke-dasharray="6,5" />
+          `;
+        }
+
+        // 1. TOP NOTE NAME BOX
+        let noteBoxFill = '#ffffff';
+        let noteBoxStroke = '#334155';
+        let noteBoxTextColor = '#0f172a';
+        let displayNoteText = '';
+
+        if (isAnswered) {
+          const noteRight = isNoteInputCorrect(q.userNote, q);
+          noteBoxFill = noteRight ? '#dcfce7' : '#fee2e2';
+          noteBoxStroke = noteRight ? '#16a34a' : '#dc2626';
+          noteBoxTextColor = noteRight ? '#15803d' : '#b91c1c';
+          displayNoteText = formatNoteDisplay(q.userNote);
+        } else if (isCurrent) {
+          if (state.pendingNoteAnswer !== null) {
+            noteBoxFill = '#e0e7ff';
+            noteBoxStroke = '#4f46e5';
+            noteBoxTextColor = '#312e81';
+            displayNoteText = formatNoteDisplay(state.pendingNoteAnswer);
+          } else {
+            noteBoxFill = '#ffffff';
+            noteBoxStroke = '#4f46e5';
+            noteBoxTextColor = '#4f46e5';
+            displayNoteText = '?';
+          }
+        }
+
+        html += `
+          <g class="cursor-pointer" data-action="tap-note-box" data-idx="${idx}">
+            <rect x="${cx - 21}" y="10" width="42" height="30" rx="5"
+              fill="${noteBoxFill}" stroke="${noteBoxStroke}" stroke-width="${isCurrent ? '2.5' : '1.6'}" />
+            <text x="${cx}" y="31" font-size="17" font-weight="900" font-family="Inter, sans-serif"
+              fill="${noteBoxTextColor}" text-anchor="middle">${displayNoteText}</text>
+          </g>
+        `;
+
+        if (isAnswered && !isNoteInputCorrect(q.userNote, q)) {
+          html += `
+            <text x="${cx + 25}" y="30" font-size="14" font-weight="900" fill="#15803d" text-anchor="start">
+              ${formatNoteDisplay(q.noteName)}
+            </text>
+          `;
+        }
+
+        // 2. FULL, UNCLAMPED LEDGER LINES BELOW (<= 28: C4, A3, F3) AND ABOVE (>= 40: A5, C6, E6, G6, B6, D7)
+        if (q.diatonicStep <= 28) {
+          for (let s = 28; s >= q.diatonicStep; s -= 2) {
+            const ly = stepToStaffY(s);
+            html += `<line x1="${cx - 15}" y1="${ly}" x2="${cx + 15}" y2="${ly}" stroke="#0f172a" stroke-width="1.75" />`;
+          }
+        }
+        if (q.diatonicStep >= 40) {
+          for (let s = 40; s <= q.diatonicStep; s += 2) {
+            const ly = stepToStaffY(s);
+            html += `<line x1="${cx - 15}" y1="${ly}" x2="${cx + 15}" y2="${ly}" stroke="#0f172a" stroke-width="1.75" />`;
+          }
+        }
+
+        // 3. PRECISION CENTERED INLINE ACCIDENTAL
+        if (state.accidentalStyle === 'inline' || state.mode === 'Chromatic' || state.mode === 'Custom') {
+          if (q.accidental === '#') {
+            html += renderAccidentalGlyph('#', cx - 20, ny, '#0f172a', 1.0);
+          } else if (q.accidental === 'b') {
+            html += renderAccidentalGlyph('b', cx - 20, ny, '#0f172a', 1.0);
+          } else if (state.mode === 'Chromatic' && idx > 0 && state.questions[idx - 1].letter === q.letter && state.questions[idx - 1].accidental !== '') {
+            html += renderAccidentalGlyph('nat', cx - 20, ny, '#0f172a', 1.0);
+          }
+        }
+
+        // 4. NOTEHEAD & STEM ON TREBLE STAFF
+        const noteColor = isCurrent ? '#4f46e5' : (isAnswered ? (q.status === 'correct' ? '#15803d' : '#dc2626') : '#0f172a');
+        const stemUp = q.diatonicStep < 34; // Stem up below B4, stem down on/above B4
+        const stemX = stemUp ? (cx + 6.8) : (cx - 6.8);
+        const stemY2 = stemUp ? (ny - 34) : (ny + 34);
+        html += `
+          <g class="cursor-pointer" data-action="tap-note-box" data-idx="${idx}">
+            <line x1="${stemX}" y1="${ny}" x2="${stemX}" y2="${stemY2}" stroke="${noteColor}" stroke-width="1.8" />
+            <ellipse cx="${cx}" cy="${ny}" rx="7.6" ry="5.2"
+              transform="rotate(-18 ${cx} ${ny})"
+              fill="${noteColor}" />
+          </g>
+        `;
+
+        // 5. TAB FRET INPUT BOX
+        let fretBoxFill = '#ffffff';
+        let fretBoxStroke = '#334155';
+        let fretBoxTextColor = '#0f172a';
+        let displayFretText = '';
+
+        if (isAnswered) {
+          const fretRight = q.userFret === q.fret;
+          fretBoxFill = fretRight ? '#dcfce7' : '#fee2e2';
+          fretBoxStroke = fretRight ? '#16a34a' : '#dc2626';
+          fretBoxTextColor = fretRight ? '#15803d' : '#b91c1c';
+          displayFretText = String(q.userFret);
+        } else if (isCurrent) {
+          if (state.pendingFretAnswer !== null) {
+            fretBoxFill = '#fef3c7';
+            fretBoxStroke = '#d97706';
+            fretBoxTextColor = '#92400e';
+            displayFretText = String(state.pendingFretAnswer);
+          } else {
+            fretBoxFill = state.pendingNoteAnswer !== null ? '#fffbeb' : '#ffffff';
+            fretBoxStroke = state.pendingNoteAnswer !== null ? '#d97706' : '#475569';
+            fretBoxTextColor = '#d97706';
+            displayFretText = state.pendingNoteAnswer !== null ? '?' : '';
+          }
+        }
+
+        html += `
+          <g class="cursor-pointer" data-action="tap-fret-box" data-idx="${idx}">
+            <rect x="${cx - 16}" y="${ty - 13}" width="32" height="26" rx="4"
+              fill="${fretBoxFill}" stroke="${fretBoxStroke}" stroke-width="${isCurrent ? '2.5' : '1.5'}" />
+            <text x="${cx}" y="${ty + 5}" font-size="15" font-weight="800" font-family="JetBrains Mono, monospace"
+              fill="${fretBoxTextColor}" text-anchor="middle">${displayFretText}</text>
+          </g>
+        `;
+
+        if (isAnswered && q.userFret !== q.fret) {
+          html += `
+            <text x="${cx + 22}" y="${ty + 5}" font-size="13" font-weight="900" font-family="JetBrains Mono, monospace" fill="#15803d" text-anchor="start">
+              ${q.fret}
+            </text>
+          `;
+        }
+      });
+
+      svg.innerHTML = html;
+    }
+
+    function scrollToActiveNote() {
+      const container = document.getElementById('staffScrollContainer');
+      if (!container) return;
+      const leftMargin = 110;
+      const noteSpacing = 96;
+      const targetX = leftMargin + state.activeIndex * noteSpacing;
+      const desiredScroll = Math.max(0, targetX - container.clientWidth * 0.38);
+      container.scrollTo({ left: desiredScroll, behavior: 'smooth' });
+    }
+
+    // ============================================================================
+    // 5. QUIZ INPUT HANDLING (Requirement #2: Close popup after selection)
+    // ============================================================================
+    function setAccidentalModifier(acc) {
+      state.selectedAccidental = acc;
+      document.querySelectorAll('.acc-btn').forEach(btn => {
+        const bAcc = btn.getAttribute('data-acc');
+        btn.className = bAcc === acc
+          ? 'acc-btn key-btn py-2.5 rounded-xl font-black text-xl bg-indigo-600 text-white border border-indigo-400 flex items-center justify-center shadow'
+          : 'acc-btn key-btn py-2.5 rounded-xl font-black text-xl bg-zinc-900 hover:bg-zinc-700 text-slate-200 border border-zinc-700 flex items-center justify-center';
+      });
+      document.querySelectorAll('.popup-acc-btn').forEach(btn => {
+        const bAcc = btn.getAttribute('data-popup-acc');
+        btn.className = bAcc === acc
+          ? 'popup-acc-btn py-3 rounded-xl font-black text-xl bg-indigo-600 border border-indigo-400 text-white'
+          : 'popup-acc-btn py-3 rounded-xl font-black text-xl bg-zinc-800 border border-zinc-700 text-slate-200';
+      });
+      // If user already tapped a note letter (e.g. tapped "F" then tapped "♯"), update pendingNoteAnswer immediately!
+      if (state.pendingNoteAnswer !== null && state.pendingFretAnswer === null) {
+        const baseLetter = state.pendingNoteAnswer.charAt(0).toUpperCase();
+        state.pendingNoteAnswer = baseLetter + acc;
+        updateDockUI();
+        renderNotationSvg();
+      }
+    }
+
+    function selectNoteLetter(letter) {
+      if (state.isPaused) return;
+      state.pendingNoteAnswer = letter + state.selectedAccidental;
+      closeDirectPopup(); // Requirement #2: Close popup immediately so sheet & TAB are visible
+      updateDockUI();
+      renderNotationSvg();
+      evaluateIfBothEntered();
+    }
+
+    function selectFretNumber(fretNum) {
+      if (state.isPaused) return;
+      state.pendingFretAnswer = Number(fretNum);
+      closeDirectPopup(); // Requirement #2: Close popup immediately so sheet & TAB are visible
+      updateDockUI();
+      renderNotationSvg();
+      evaluateIfBothEntered();
+    }
+
+    function evaluateIfBothEntered() {
+      if (state.pendingNoteAnswer === null || state.pendingFretAnswer === null) return;
+
+      closeDirectPopup();
+
+      const currentQ = state.questions[state.activeIndex];
+      if (!currentQ) return;
+
+      currentQ.userNote = state.pendingNoteAnswer;
+      currentQ.userFret = state.pendingFretAnswer;
+
+      const noteCorrect = isNoteInputCorrect(currentQ.userNote, currentQ);
+      const fretCorrect = currentQ.userFret === currentQ.fret;
+      const bothCorrect = noteCorrect && fretCorrect;
+
+      currentQ.status = bothCorrect ? 'correct' : 'wrong';
+
+      const reactionSec = Math.max(0.2, Math.min(60, (Date.now() - state.noteStartTimeMs) / 1000));
+      state.reactionTimesSec.push(Number(reactionSec.toFixed(2)));
+      state.notesAttempted += 1;
+      if (noteCorrect) state.notesNameCorrect += 1;
+      if (fretCorrect) state.notesFretCorrect += 1;
+      if (bothCorrect) state.notesBothCorrect += 1;
+
+      playGuitarTone(currentQ.midi, !bothCorrect);
+
+      const banner = document.getElementById('liveFeedbackBanner');
+      if (banner) {
+        if (bothCorrect) {
+          banner.className = 'text-xs sm:text-sm font-extrabold px-3 py-1 rounded-lg bg-emerald-100 text-emerald-900 border border-emerald-300';
+          banner.textContent = `✓ ${formatNoteDisplay(currentQ.noteName)} · String ${currentQ.stringNum} Fret ${currentQ.fret} (${reactionSec.toFixed(1)}s)`;
+        } else {
+          banner.className = 'text-xs sm:text-sm font-extrabold px-3 py-1 rounded-lg bg-rose-100 text-rose-900 border border-rose-300';
+          banner.textContent = `✗ ${formatNoteDisplay(currentQ.noteName)} · Fret ${currentQ.fret}`;
+        }
+      }
+
+      state.activeIndex += 1;
+      state.pendingNoteAnswer = null;
+      state.pendingFretAnswer = null;
+      state.selectedAccidental = '';
+      setAccidentalModifier('');
+      state.noteStartTimeMs = Date.now();
+
+      while (state.questions.length - state.activeIndex < 10) {
+        const lastQ = state.questions[state.questions.length - 1];
+        state.questions.push(generateNextQuestion(lastQ));
+      }
+
+      updateHudMetrics();
+      updateDockUI();
+      renderNotationSvg();
+      scrollToActiveNote();
+    }
+
+    function updateDockUI() {
+      const currentQ = state.questions[state.activeIndex];
+      if (!currentQ) return;
+
+      const badge = document.getElementById('currentNoteInputBadge');
+      if (badge) {
+        badge.textContent = state.pendingNoteAnswer ? formatNoteDisplay(state.pendingNoteAnswer) : '?';
+      }
+
+      const targetStrEl = document.getElementById('targetStringHighlight');
+      if (targetStrEl) {
+        targetStrEl.textContent = `String ${currentQ.stringNum}`;
+      }
+
+      const step1Card = document.getElementById('dockStep1Card');
+      const step2Card = document.getElementById('dockStep2Card');
+      if (step1Card && step2Card) {
+        if (state.pendingNoteAnswer === null) {
+          step1Card.className = 'lg:col-span-5 bg-zinc-800/80 rounded-xl p-3.5 border-2 border-indigo-500 transition-all flex flex-col justify-between gap-3 shadow-lg shadow-indigo-500/10';
+          step2Card.className = 'lg:col-span-7 bg-zinc-800/50 rounded-xl p-3.5 border-2 border-zinc-700/70 transition-all flex flex-col justify-between gap-3';
+        } else {
+          step1Card.className = 'lg:col-span-5 bg-zinc-800/50 rounded-xl p-3.5 border-2 border-emerald-500/60 transition-all flex flex-col justify-between gap-3';
+          step2Card.className = 'lg:col-span-7 bg-zinc-800/80 rounded-xl p-3.5 border-2 border-amber-500 transition-all flex flex-col justify-between gap-3 shadow-lg shadow-amber-500/10';
+        }
+      }
+
+      const keypad = document.getElementById('dockFretKeypad');
+      if (keypad) {
+        let kHtml = '';
+        for (let f = 0; f <= 24; f++) {
+          const inRange = f >= state.minFret && f <= state.maxFret;
+          const isSelected = state.pendingFretAnswer === f;
+          const btnCls = isSelected
+            ? 'bg-amber-500 text-slate-950 border-amber-300 font-black'
+            : (inRange
+                ? 'bg-zinc-900 hover:bg-amber-500 hover:text-slate-950 text-white border-slate-600 font-extrabold'
+                : 'bg-zinc-900/40 hover:bg-zinc-800 text-slate-500 border-zinc-800 font-semibold');
+          kHtml += `
+            <button type="button" data-fret="${f}" class="fret-num-btn key-btn py-2.5 rounded-xl text-sm sm:text-base mono border transition ${btnCls}">
+              ${f}
+            </button>
+          `;
+        }
+        keypad.innerHTML = kHtml;
+      }
+    }
+
+    function openDirectPopup(mode) {
+      const currentQ = state.questions[state.activeIndex];
+      if (!currentQ) return;
+      const modal = document.getElementById('DirectTapPopup');
+      const title = document.getElementById('popupTitle');
+      const noteBox = document.getElementById('popupContentNote');
+      const fretBox = document.getElementById('popupContentFret');
+
+      if (mode === 'note') {
+        title.textContent = `Note (#${state.activeIndex + 1})`;
+        noteBox.classList.remove('hidden');
+        fretBox.classList.add('hidden');
+      } else {
+        title.textContent = `Fret · String ${currentQ.stringNum}`;
+        noteBox.classList.add('hidden');
+        fretBox.classList.remove('hidden');
+
+        const fretGrid = document.getElementById('popupFretGrid');
+        let fHtml = '';
+        for (let f = 0; f <= 24; f++) {
+          const inRange = f >= state.minFret && f <= state.maxFret;
+          fHtml += `
+            <button type="button" data-popup-fret="${f}" class="py-3 rounded-xl mono font-extrabold text-base border ${
+              inRange ? 'bg-zinc-800 hover:bg-amber-500 hover:text-slate-950 text-white border-slate-600' : 'bg-zinc-900 text-slate-500 border-zinc-800'
+            }">${f}</button>
+          `;
+        }
+        fretGrid.innerHTML = fHtml;
+      }
+      modal.classList.remove('hidden');
+    }
+
+    function closeDirectPopup() {
+      const modal = document.getElementById('DirectTapPopup');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    // ============================================================================
+    // 6. SESSION HUD, STOP CONFIRMATION & STORAGE (Requirements #9 & #10)
+    // ============================================================================
+    function calcMeanAndSd(values) {
+      if (!values || values.length === 0) return { mean: 0, sd: 0, min: 0, max: 0 };
+      const n = values.length;
+      const mean = values.reduce((a, b) => a + b, 0) / n;
+      const variance = values.reduce((acc, v) => acc + Math.pow(v - mean, 2), 0) / n;
+      const sd = Math.sqrt(variance);
+      return {
+        mean,
+        sd,
+        min: Math.min(...values),
+        max: Math.max(...values)
+      };
+    }
+
+    function formatDuration(sec) {
+      const m = Math.floor(sec / 60);
+      const s = Math.floor(sec % 60);
+      return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+    }
+
+    function updateHudMetrics() {
+      const attEl = document.getElementById('hudAttempted');
+      const corrEl = document.getElementById('hudCorrectCount');
+      const accEl = document.getElementById('hudAccuracy');
+      const splitEl = document.getElementById('hudSplitAccuracy');
+      const speedEl = document.getElementById('hudSpeed');
+      const speedSdEl = document.getElementById('hudSpeedSd');
+
+      const n = state.notesAttempted;
+      const overallAcc = n > 0 ? (state.notesBothCorrect / n) * 100 : 100;
+      const noteAcc = n > 0 ? (state.notesNameCorrect / n) * 100 : 100;
+      const fretAcc = n > 0 ? (state.notesFretCorrect / n) * 100 : 100;
+      const speedStats = calcMeanAndSd(state.reactionTimesSec);
+
+      if (attEl) attEl.textContent = String(n);
+      if (corrEl) corrEl.textContent = `(${state.notesBothCorrect}✓)`;
+      if (accEl) accEl.textContent = `${overallAcc.toFixed(0)}%`;
+      if (splitEl) splitEl.textContent = `(${noteAcc.toFixed(0)}%/${fretAcc.toFixed(0)}%)`;
+      if (speedEl) speedEl.textContent = `${speedStats.mean.toFixed(1)}s`;
+      if (speedSdEl) speedSdEl.textContent = `±${speedStats.sd.toFixed(1)}s`;
+    }
+
+    // Requirement #10: Start empty if no session is saved by the user
+    function loadLogs() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        return raw ? JSON.parse(raw) : [];
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function saveLogs(logs) {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(logs));
+      } catch (e) {}
+    }
+
+    function startNewQuizSession() {
+      state.sessionActive = true;
+      state.sessionStartedAtIso = new Date().toISOString();
+      state.isPaused = false;
+      state.elapsedSec = 0;
+      state.notesAttempted = 0;
+      state.notesBothCorrect = 0;
+      state.notesNameCorrect = 0;
+      state.notesFretCorrect = 0;
+      state.reactionTimesSec = [];
+      const timerEl = document.getElementById('hudTimer');
+      if (timerEl) timerEl.textContent = '00:00';
+      const pauseBtn = document.getElementById('btnPauseResume');
+      if (pauseBtn) pauseBtn.textContent = 'Pause';
+      updateHudMetrics();
+      initQuestionStream();
+      switchMainView('quiz');
+    }
+
+    // Requirement #9: Stop button prompts user whether to save session (Yes / No)
+    function promptStopSession() {
+      state.isPaused = true;
+      const n = state.notesAttempted;
+      const overallAcc = n > 0 ? ((state.notesBothCorrect / n) * 100).toFixed(1) : '0.0';
+      document.getElementById('stopModalAcc').textContent = `${overallAcc}%`;
+      document.getElementById('stopModalNotes').textContent = String(n);
+      document.getElementById('stopModalDuration').textContent = formatDuration(state.elapsedSec);
+      document.getElementById('stopSessionConfirmModal').classList.remove('hidden');
+    }
+
+    function confirmSaveSessionYes() {
+      document.getElementById('stopSessionConfirmModal').classList.add('hidden');
+      state.sessionActive = false;
+
+      const n = state.notesAttempted;
+      const overallAcc = n > 0 ? Number(((state.notesBothCorrect / n) * 100).toFixed(1)) : 0;
+      const noteAcc = n > 0 ? Number(((state.notesNameCorrect / n) * 100).toFixed(1)) : 0;
+      const fretAcc = n > 0 ? Number(((state.notesFretCorrect / n) * 100).toFixed(1)) : 0;
+      const speedStats = calcMeanAndSd(state.reactionTimesSec);
+      const startDt = state.sessionStartedAtIso ? new Date(state.sessionStartedAtIso) : new Date();
+      const { lowLabel, highLabel } = getAutoClefBounds();
+
+      const logs = loadLogs();
+      const nextSessionNumber = logs.length > 0 ? Math.max(...logs.map(l => l.sessionNumber || 0)) + 1 : 1;
+
+      const modeDisplay = state.mode === 'Custom' && state.customScaleName ? state.customScaleName : state.mode;
+
+      const record = {
+        id: 'sess_' + Date.now(),
+        sessionNumber: nextSessionNumber,
+        timestamp: startDt.toISOString(),
+        dateStr: startDt.toISOString().slice(0, 10),
+        rootKey: state.rootKey,
+        mode: modeDisplay,
+        staffRange: `${lowLabel}–${highLabel}`,
+        fretRange: `${state.minFret}–${state.maxFret}`,
+        notesAttempted: n,
+        accuracy: overallAcc,
+        noteAccuracy: noteAcc,
+        fretAccuracy: fretAcc,
+        durationSec: Math.max(1, state.elapsedSec),
+        speedMeanSec: Number(speedStats.mean.toFixed(2)),
+        speedSdSec: Number(speedStats.sd.toFixed(2))
+      };
+
+      logs.push(record);
+      saveLogs(logs);
+
+      state.elapsedSec = 0;
+      state.notesAttempted = 0;
+      state.notesBothCorrect = 0;
+      state.notesNameCorrect = 0;
+      state.notesFretCorrect = 0;
+      state.reactionTimesSec = [];
+      updateHudMetrics();
+      showToast(`Session #${nextSessionNumber} saved`);
+      switchMainView('stats', true);
+    }
+
+    function confirmSaveSessionNo() {
+      document.getElementById('stopSessionConfirmModal').classList.add('hidden');
+      state.sessionActive = false;
+      state.elapsedSec = 0;
+      state.notesAttempted = 0;
+      state.notesBothCorrect = 0;
+      state.notesNameCorrect = 0;
+      state.notesFretCorrect = 0;
+      state.reactionTimesSec = [];
+      updateHudMetrics();
+      showToast('Session discarded');
+      switchMainView('stats', true);
+    }
+
+    // ============================================================================
+    // 7. ANALYTICS ENGINE (Requirements #7, #8, #10, #11)
+    // ============================================================================
+    let statsChart = null;
+
+    // Day segment based on session start hour:
+    // Morning: 4:00am - 11:59am (hour 4..11)
+    // Noon:    12:00pm - 4:00pm (hour 12..15)
+    // Evening: 4:00pm - 7:00pm  (hour 16..18)
+    // Night:   7:00pm - 3:59am  (hour 19..23 or 0..3)
+    function getDaySegment(isoTimestamp) {
+      const d = new Date(isoTimestamp);
+      const h = d.getHours();
+      if (h >= 4 && h < 12) return 'Morning';
+      if (h >= 12 && h < 16) return 'Noon';
+      if (h >= 16 && h < 19) return 'Evening';
+      return 'Night';
+    }
+
+    function getLocalDateStr(d) {
+      const yr = d.getFullYear();
+      const mo = String(d.getMonth() + 1).padStart(2, '0');
+      const da = String(d.getDate()).padStart(2, '0');
+      return `${yr}-${mo}-${da}`;
+    }
+
+    function getMetricValue(session, metric) {
+      if (metric === 'accuracy') return session.accuracy;
+      if (metric === 'notesAttempted') return session.notesAttempted;
+      if (metric === 'practiceTimeMin') return Number((session.durationSec / 60).toFixed(2));
+      if (metric === 'speedSec') return session.speedMeanSec;
+      return session.accuracy;
+    }
+
+    function formatMetricUnit(val, metric) {
+      if (metric === 'accuracy') return `${val.toFixed(1)}%`;
+      if (metric === 'notesAttempted') return `${val.toFixed(1)}`;
+      if (metric === 'practiceTimeMin') return `${val.toFixed(2)}m`;
+      if (metric === 'speedSec') return `${val.toFixed(2)}s`;
+      return val.toFixed(1);
+    }
+
+    function buildPeriodBuckets(logs) {
+      const now = new Date();
+      const todayStr = getLocalDateStr(now);
+      const buckets = []; // [{ label, sessions: [] }]
+
+      if (state.statPeriod === 'daily') {
+        // 4 fixed segments for today: Morning, Noon, Evening, Night
+        const segments = ['Morning', 'Noon', 'Evening', 'Night'];
+        const map = { Morning: [], Noon: [], Evening: [], Night: [] };
+        logs.forEach(s => {
+          const sDate = getLocalDateStr(new Date(s.timestamp));
+          if (sDate === todayStr) {
+            const seg = getDaySegment(s.timestamp);
+            map[seg].push(s);
+          }
+        });
+        segments.forEach(seg => buckets.push({ label: seg, sessions: map[seg] }));
+        return { buckets, matchingSessions: logs.filter(s => getLocalDateStr(new Date(s.timestamp)) === todayStr) };
+      }
+
+      if (state.statPeriod === 'weekly') {
+        // Current week Monday..Sunday: Mo Tu We Th Fr Sa Su
+        const dayNames = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
+        const jsDay = now.getDay(); // 0=Sun..6=Sat
+        const diffToMon = (jsDay === 0 ? -6 : 1 - jsDay);
+        const monday = new Date(now.getFullYear(), now.getMonth(), now.getDate() + diffToMon);
+        const weekDateStrs = [];
+        for (let i = 0; i < 7; i++) {
+          const d = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + i);
+          weekDateStrs.push(getLocalDateStr(d));
+        }
+        const matching = [];
+        dayNames.forEach((dLabel, idx) => {
+          const targetDate = weekDateStrs[idx];
+          const daySessions = logs.filter(s => getLocalDateStr(new Date(s.timestamp)) === targetDate);
+          matching.push(...daySessions);
+          buckets.push({ label: dLabel, sessions: daySessions });
+        });
+        return { buckets, matchingSessions: matching };
+      }
+
+      if (state.statPeriod === 'monthly') {
+        // Each day in current month: 1..daysInMonth
+        const yr = now.getFullYear();
+        const mo = now.getMonth();
+        const daysInMonth = new Date(yr, mo + 1, 0).getDate();
+        const matching = [];
+        for (let day = 1; day <= daysInMonth; day++) {
+          const targetDate = `${yr}-${String(mo + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+          const daySessions = logs.filter(s => getLocalDateStr(new Date(s.timestamp)) === targetDate);
+          matching.push(...daySessions);
+          buckets.push({ label: String(day), sessions: daySessions });
+        }
+        return { buckets, matchingSessions: matching };
+      }
+
+      if (state.statPeriod === 'yearly') {
+        // Each month in current year: Jan..Dec
+        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const yr = now.getFullYear();
+        const matching = [];
+        monthNames.forEach((mLabel, mIdx) => {
+          const prefix = `${yr}-${String(mIdx + 1).padStart(2, '0')}`;
+          const mSessions = logs.filter(s => getLocalDateStr(new Date(s.timestamp)).startsWith(prefix));
+          matching.push(...mSessions);
+          buckets.push({ label: mLabel, sessions: mSessions });
+        });
+        return { buckets, matchingSessions: matching };
+      }
+
+      // Custom range: X-axis is days if <= 30 days, or months if > 30 days
+      const fromStr = document.getElementById('inputDateFrom').value;
+      const toStr = document.getElementById('inputDateTo').value;
+      if (!fromStr || !toStr || fromStr > toStr) {
+        return { buckets: [], matchingSessions: [] };
+      }
+
+      const startDt = new Date(fromStr + 'T00:00:00');
+      const endDt = new Date(toStr + 'T00:00:00');
+      const diffDays = Math.round((endDt - startDt) / 86400000) + 1;
+
+      const matching = logs.filter(s => {
+        const dStr = getLocalDateStr(new Date(s.timestamp));
+        return dStr >= fromStr && dStr <= toStr;
+      });
+
+      if (diffDays <= 30) {
+        for (let i = 0; i < diffDays; i++) {
+          const d = new Date(startDt.getFullYear(), startDt.getMonth(), startDt.getDate() + i);
+          const dStr = getLocalDateStr(d);
+          const daySessions = matching.filter(s => getLocalDateStr(new Date(s.timestamp)) === dStr);
+          buckets.push({ label: dStr.slice(5), sessions: daySessions });
+        }
+      } else {
+        const monthMap = new Map();
+        let cur = new Date(startDt.getFullYear(), startDt.getMonth(), 1);
+        while (cur <= endDt) {
+          const mKey = `${cur.getFullYear()}-${String(cur.getMonth() + 1).padStart(2, '0')}`;
+          monthMap.set(mKey, []);
+          cur = new Date(cur.getFullYear(), cur.getMonth() + 1, 1);
+        }
+        matching.forEach(s => {
+          const mKey = getLocalDateStr(new Date(s.timestamp)).slice(0, 7);
+          if (monthMap.has(mKey)) monthMap.get(mKey).push(s);
+        });
+        monthMap.forEach((sessList, mKey) => {
+          buckets.push({ label: mKey, sessions: sessList });
+        });
+      }
+
+      return { buckets, matchingSessions: matching };
+    }
+
+    function updateExportButtonState() {
+      const btn = document.getElementById('btnExportExcel');
+      const fromStr = document.getElementById('inputDateFrom').value;
+      const toStr = document.getElementById('inputDateTo').value;
+      const isCustomValid = state.statPeriod === 'custom' && Boolean(fromStr) && Boolean(toStr) && fromStr <= toStr;
+
+      if (isCustomValid) {
+        btn.disabled = false;
+        btn.className = 'px-3.5 py-2 rounded-xl text-xs sm:text-sm font-extrabold bg-emerald-600 hover:bg-emerald-500 text-white border border-emerald-400 shadow cursor-pointer transition';
+      } else {
+        btn.disabled = true;
+        btn.className = 'px-3.5 py-2 rounded-xl text-xs sm:text-sm font-extrabold bg-zinc-800 text-slate-500 border border-zinc-700 cursor-not-allowed transition';
+      }
+    }
+
+    function renderAnalyticsDashboard() {
+      updateExportButtonState();
+
+      const allLogs = loadLogs().map((s, idx) => ({
+        ...s,
+        sessionNumber: s.sessionNumber || (idx + 1)
+      }));
+
+      const { buckets, matchingSessions } = buildPeriodBuckets(allLogs);
+
+      const allValues = matchingSessions.map(s => getMetricValue(s, state.statMetric));
+      const overallStats = calcMeanAndSd(allValues);
+      const totalNotes = matchingSessions.reduce((acc, s) => acc + s.notesAttempted, 0);
+
+      document.getElementById('statKpiMean').textContent = matchingSessions.length > 0
+        ? formatMetricUnit(overallStats.mean, state.statMetric)
+        : '0.0';
+      document.getElementById('statKpiSd').textContent = matchingSessions.length > 0
+        ? `±${formatMetricUnit(overallStats.sd, state.statMetric)}`
+        : '±0.0';
+      document.getElementById('statKpiSessions').textContent = String(matchingSessions.length);
+      document.getElementById('statKpiTotalNotes').textContent = `${totalNotes} notes`;
+      document.getElementById('statKpiRange').textContent = matchingSessions.length > 0
+        ? `${formatMetricUnit(overallStats.min, state.statMetric)} – ${formatMetricUnit(overallStats.max, state.statMetric)}`
+        : '—';
+
+      const metricLabels = {
+        accuracy: 'Accuracy (%)',
+        notesAttempted: 'Notes Attempted',
+        practiceTimeMin: 'Practice Time (Min)',
+        speedSec: 'Speed (Sec / Note)'
+      };
+      const periodLabels = {
+        daily: 'Daily (Morning / Noon / Evening / Night)',
+        weekly: 'Weekly (Mo – Su)',
+        monthly: 'Monthly (Days)',
+        yearly: 'Yearly (Months)',
+        custom: 'Custom Range'
+      };
+
+      document.getElementById('chartHeading').textContent =
+        `${periodLabels[state.statPeriod]} — ${metricLabels[state.statMetric]}`;
+
+      const chartLabels = [];
+      const meanSeries = [];
+      const upperSdSeries = [];
+      const lowerSdSeries = [];
+      let tableHtml = '';
+
+      buckets.forEach(b => {
+        const group = b.sessions;
+        const paramStats = calcMeanAndSd(group.map(s => getMetricValue(s, state.statMetric)));
+        const accStats = calcMeanAndSd(group.map(s => s.accuracy));
+        const notesStats = calcMeanAndSd(group.map(s => s.notesAttempted));
+        const timeStats = calcMeanAndSd(group.map(s => s.durationSec / 60));
+        const speedStats = calcMeanAndSd(group.map(s => s.speedMeanSec));
+
+        chartLabels.push(b.label);
+        const mVal = group.length > 0 ? Number(paramStats.mean.toFixed(2)) : 0;
+        const sdVal = group.length > 0 ? Number(paramStats.sd.toFixed(2)) : 0;
+        meanSeries.push(mVal);
+        upperSdSeries.push(group.length > 0 ? Number((mVal + sdVal).toFixed(2)) : null);
+        lowerSdSeries.push(group.length > 0 ? Number(Math.max(0, mVal - sdVal).toFixed(2)) : null);
+
+        if (group.length > 0 || state.statPeriod === 'daily' || state.statPeriod === 'weekly') {
+          tableHtml += `
+            <tr class="hover:bg-zinc-800/50">
+              <td class="py-2.5 px-3 font-bold text-white">${b.label}</td>
+              <td class="py-2.5 px-3 text-slate-300">${group.length}</td>
+              <td class="py-2.5 px-3 font-bold text-indigo-400">${group.length ? formatMetricUnit(paramStats.mean, state.statMetric) : '—'}</td>
+              <td class="py-2.5 px-3 font-bold text-amber-400">${group.length ? '±' + formatMetricUnit(paramStats.sd, state.statMetric) : '—'}</td>
+              <td class="py-2.5 px-3 text-emerald-300">${group.length ? `${accStats.mean.toFixed(1)}% ± ${accStats.sd.toFixed(1)}%` : '—'}</td>
+              <td class="py-2.5 px-3 text-slate-200">${group.length ? `${notesStats.mean.toFixed(1)} ± ${notesStats.sd.toFixed(1)}` : '—'}</td>
+              <td class="py-2.5 px-3 text-slate-200">${group.length ? `${timeStats.mean.toFixed(2)}m ± ${timeStats.sd.toFixed(2)}m` : '—'}</td>
+              <td class="py-2.5 px-3 text-amber-300">${group.length ? `${speedStats.mean.toFixed(2)}s ± ${speedStats.sd.toFixed(2)}s` : '—'}</td>
+            </tr>
+          `;
+        }
+      });
+
+      document.getElementById('periodStatsTableBody').innerHTML = tableHtml || `
+        <tr><td colspan="8" class="py-6 text-center text-slate-500">No saved sessions in this period.</td></tr>
+      `;
+
+      // Update Chart.js Bar Graph
+      const ctx = document.getElementById('statsChartCanvas');
+      if (ctx) {
+        if (statsChart) statsChart.destroy();
+        statsChart = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: chartLabels,
+            datasets: [
+              {
+                type: 'line',
+                label: `+SD (μ + σ)`,
+                data: upperSdSeries,
+                borderColor: '#facc15',
+                backgroundColor: '#facc15',
+                borderWidth: 2.5,
+                borderDash: [5, 5],
+                pointRadius: 4,
+                pointBackgroundColor: '#facc15',
+                spanGaps: true,
+                tension: 0.2,
+                order: 1
+              },
+              {
+                type: 'line',
+                label: `−SD (μ − σ)`,
+                data: lowerSdSeries,
+                borderColor: '#eab308',
+                backgroundColor: '#eab308',
+                borderWidth: 2.5,
+                borderDash: [5, 5],
+                pointRadius: 4,
+                pointBackgroundColor: '#eab308',
+                spanGaps: true,
+                tension: 0.2,
+                order: 1
+              },
+              {
+                type: 'bar',
+                label: `Mean (μ)`,
+                data: meanSeries,
+                backgroundColor: 'rgba(59, 130, 246, 0.82)',
+                borderColor: '#60a5fa',
+                borderWidth: 1.5,
+                borderRadius: 6,
+                order: 2
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                labels: { color: '#cbd5e1', font: { family: 'Inter', size: 12, weight: 'bold' } }
+              }
+            },
+            scales: {
+              x: {
+                ticks: { color: '#e2e8f0', font: { family: 'Inter', size: 12, weight: 'bold' } },
+                grid: { color: 'rgba(148, 163, 184, 0.08)' }
+              },
+              y: {
+                beginAtZero: true,
+                ticks: { color: '#94a3b8', font: { family: 'JetBrains Mono', size: 11 } },
+                grid: { color: 'rgba(148, 163, 184, 0.12)' }
+              }
+            }
+          }
+        });
+      }
+
+      // Requirement #10: Recent Sessions (Only show last 5 initially, with Load More button & manual delete)
+      const reversedLogs = allLogs.slice().reverse();
+      const visibleLogs = reversedLogs.slice(0, state.visibleLogCount);
+      document.getElementById('recentSessionsCountBadge').textContent = `${allLogs.length} saved`;
+      const clearAllBtn = document.getElementById('btnClearLogs');
+      if (clearAllBtn) {
+        if (allLogs.length > 0) clearAllBtn.classList.remove('hidden');
+        else clearAllBtn.classList.add('hidden');
+      }
+
+      let rawHtml = '';
+      visibleLogs.forEach(sess => {
+        const dt = new Date(sess.timestamp);
+        const datePart = getLocalDateStr(dt);
+        const timePart = dt.toTimeString().slice(0, 5);
+        const seg = getDaySegment(sess.timestamp);
+        rawHtml += `
+          <tr class="hover:bg-zinc-800/40">
+            <td class="py-2.5 px-3 mono font-black text-indigo-400">#${sess.sessionNumber}</td>
+            <td class="py-2.5 px-3 mono text-slate-300">${datePart} ${timePart} <span class="text-xs text-slate-500">(${seg})</span></td>
+            <td class="py-2.5 px-3 font-bold text-white">${formatNoteDisplay(sess.rootKey)} ${sess.mode}</td>
+            <td class="py-2.5 px-3 mono font-bold text-white">${sess.notesAttempted}</td>
+            <td class="py-2.5 px-3 mono font-bold text-emerald-400">${sess.accuracy.toFixed(1)}%</td>
+            <td class="py-2.5 px-3 mono text-slate-300">${formatDuration(sess.durationSec)}</td>
+            <td class="py-2.5 px-3 mono text-amber-300">${sess.speedMeanSec}s ± ${sess.speedSdSec}s</td>
+            <td class="py-2.5 px-3 text-right">
+              <button type="button" data-del-session="${sess.id}" class="text-rose-400 hover:text-rose-300 font-bold px-2.5 py-1 rounded-lg bg-rose-500/10 hover:bg-rose-500/20">Delete</button>
+            </td>
+          </tr>
+        `;
+      });
+
+      document.getElementById('rawSessionTableBody').innerHTML = rawHtml || `
+        <tr><td colspan="8" class="py-8 text-center text-slate-500 font-semibold">No saved sessions yet.</td></tr>
+      `;
+
+      const loadMoreBtn = document.getElementById('btnLoadMoreSessions');
+      if (allLogs.length > state.visibleLogCount) {
+        loadMoreBtn.classList.remove('hidden');
+        loadMoreBtn.textContent = `Load More (${allLogs.length - state.visibleLogCount} remaining)`;
+      } else {
+        loadMoreBtn.classList.add('hidden');
+      }
+    }
+
+    // Requirement #11: Export saved sessions within custom date range as an Excel sheet (.xlsx)
+    function exportCustomRangeExcel() {
+      if (state.statPeriod !== 'custom') return;
+      const fromStr = document.getElementById('inputDateFrom').value;
+      const toStr = document.getElementById('inputDateTo').value;
+      if (!fromStr || !toStr || fromStr > toStr) {
+        showToast('Select a valid custom date range first.');
+        return;
+      }
+
+      const allLogs = loadLogs().map((s, idx) => ({
+        ...s,
+        sessionNumber: s.sessionNumber || (idx + 1)
+      }));
+
+      const matching = allLogs.filter(s => {
+        const dStr = getLocalDateStr(new Date(s.timestamp));
+        return dStr >= fromStr && dStr <= toStr;
+      });
+
+      const rows = matching.map(s => {
+        const dt = new Date(s.timestamp);
+        return {
+          'Session #': s.sessionNumber,
+          'Date': getLocalDateStr(dt),
+          'Start Time': dt.toTimeString().slice(0, 8),
+          'Day Segment': getDaySegment(s.timestamp),
+          'Key': formatNoteDisplay(s.rootKey),
+          'Mode': s.mode,
+          'Fret Range': s.fretRange,
+          'Treble Clef Range': s.staffRange,
+          'Notes Attempted': s.notesAttempted,
+          'Accuracy (%)': s.accuracy,
+          'Note Accuracy (%)': s.noteAccuracy,
+          'Fret Accuracy (%)': s.fretAccuracy,
+          'Practice Time (s)': s.durationSec,
+          'Mean Speed (s/note)': s.speedMeanSec,
+          'Speed SD (s/note)': s.speedSdSec
+        };
+      });
+
+      if (window.XLSX) {
+        const ws = window.XLSX.utils.json_to_sheet(rows.length > 0 ? rows : [{ 'Session #': 'No sessions in range' }]);
+        const wb = window.XLSX.utils.book_new();
+        window.XLSX.utils.book_append_sheet(wb, ws, 'Sessions');
+        window.XLSX.writeFile(wb, `FretGym_Sessions_${fromStr}_to_${toStr}.xlsx`);
+        showToast('Exported Excel sheet (.xlsx)');
+      } else {
+        // Fallback CSV if CDN blocked
+        const headers = ['Session #','Date','Start Time','Day Segment','Key','Mode','Fret Range','Notes Attempted','Accuracy (%)','Practice Time (s)','Mean Speed (s/note)','Speed SD (s/note)'];
+        const csvLines = [headers.join(',')];
+        rows.forEach(r => {
+          csvLines.push(headers.map(h => `"${r[h] ?? ''}"`).join(','));
+        });
+        const blob = new Blob([csvLines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `FretGym_Sessions_${fromStr}_to_${toStr}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+    }
+
+    // ============================================================================
+    // 8. INTERACTIVE FRETBOARD MAP (Requirements #1, #6, #8, #9)
+    // ============================================================================
+    function renderFretboardMap() {
+      const container = document.getElementById('fretboardMapContainer');
+      if (!container) return;
+
+      const modeTitle = state.mode === 'Custom' && state.customScaleName
+        ? state.customScaleName
+        : (MODES[state.mode] ? MODES[state.mode].label : state.mode);
+
+      document.getElementById('refSelectedKeyMode').textContent =
+        `${formatNoteDisplay(state.rootKey)} ${modeTitle}`;
+
+      // Requirement #6: Show Chord Name formed by selected intervals/notes
+      document.getElementById('detectedChordBadge').textContent =
+        `Chord: ${detectChordFromSelectedIntervals()}`;
+
+      const modeSpellings = getModeSpellings(state.rootKey, state.mode);
+      const intervalBar = document.getElementById('mapIntervalSelector');
+      if (intervalBar) {
+        let iHtml = '';
+        modeSpellings.forEach((sp, idx) => {
+          const col = INTERVAL_COLORS[idx % INTERVAL_COLORS.length];
+          const isSelected = state.selectedIntervals.has(idx);
+          const cls = isSelected
+            ? `${col.bg} ${col.text} ${col.border} ring-2 ${col.ring} shadow`
+            : 'bg-zinc-800 text-slate-400 border-zinc-700 opacity-75';
+          iHtml += `
+            <button type="button" data-toggle-interval="${idx}"
+              class="px-3 py-1.5 rounded-xl border font-black text-sm sm:text-base transition flex items-center gap-1.5 ${cls}">
+              <span>${sp.degreeLabel}</span>
+              <span class="text-xs opacity-85">(${formatNoteDisplay(sp.name)})</span>
+            </button>
+          `;
+        });
+        intervalBar.innerHTML = iHtml;
+      }
+
+      const validPool = buildValidQuestionPool();
+      const validLookup = new Map();
+      validPool.forEach(item => {
+        validLookup.set(`${item.stringNum}_${item.fret}`, item);
+      });
+
+      const maxFretToShow = 24;
+      let html = `<div class="bg-zinc-950 p-3 sm:p-4 rounded-2xl border border-zinc-800">`;
+
+      // Fret numbers header (0 to 24)
+      html += `<div class="grid gap-1.5 mb-2" style="grid-template-columns: 44px repeat(${maxFretToShow + 1}, minmax(44px, 1fr));">`;
+      html += `<div class="text-xs font-extrabold text-slate-500 text-center">Str</div>`;
+      for (let f = 0; f <= maxFretToShow; f++) {
+        const inRange = f >= state.minFret && f <= state.maxFret;
+        html += `<div class="text-center mono text-sm font-extrabold ${inRange ? 'text-amber-400' : 'text-slate-600'}">${f}</div>`;
+      }
+      html += `</div>`;
+
+      // 6 strings rows (1 to 6) — Requirement #1: Pure notes/intervals ONLY, NO octave numbers
+      for (let s = 1; s <= 6; s++) {
+        html += `<div class="grid gap-1.5 items-center py-1.5 border-t border-zinc-800/80" style="grid-template-columns: 44px repeat(${maxFretToShow + 1}, minmax(44px, 1fr));">`;
+        html += `<div class="text-base font-black text-slate-200 text-center mono">${s}</div>`;
+
+        for (let f = 0; f <= maxFretToShow; f++) {
+          const match = validLookup.get(`${s}_${f}`);
+          if (match) {
+            const isHighlighted = state.selectedIntervals.has(match.degreeIndex);
+            const col = INTERVAL_COLORS[match.degreeIndex % INTERVAL_COLORS.length];
+
+            const cellLabel = state.mapDisplayMode === 'intervals'
+              ? match.degreeLabel
+              : formatNoteDisplay(match.noteName);
+
+            const btnStyle = isHighlighted
+              ? `${col.bg} ${col.text} ${col.border}`
+              : `bg-zinc-800 text-slate-400 border-zinc-700`;
+
+            html += `
+              <button type="button" data-map-midi="${match.midi}"
+                class="py-2 px-1 rounded-xl text-sm sm:text-base font-black border transition shadow-sm truncate ${btnStyle}">
+                ${cellLabel}
+              </button>
+            `;
+          } else {
+            html += `
+              <div class="py-2 rounded-xl text-xs text-center mono text-slate-800 bg-zinc-900/30">
+                ·
+              </div>
+            `;
+          }
+        }
+        html += `</div>`;
+      }
+      html += `</div>`;
+      container.innerHTML = html;
+    }
+
+    // ============================================================================
+    // 9. SETTINGS UI, CUSTOM SCALE BUILDER & NAVIGATION
+    // ============================================================================
+    function showToast(msg) {
+      const t = document.getElementById('toastBanner');
+      if (!t) return;
+      t.textContent = msg;
+      t.classList.remove('hidden');
+      clearTimeout(window.__toastTimer);
+      window.__toastTimer = setTimeout(() => t.classList.add('hidden'), 2800);
+    }
+
+    function renderCustomScaleDropdown() {
+      const sel = document.getElementById('selectSavedCustomScale');
+      const delBtn = document.getElementById('btnDeleteCustomScale');
+      if (!sel) return;
+      const list = loadCustomScales();
+      let html = `<option value="">Load Saved Custom Scale (${list.length})...</option>`;
+      list.forEach(item => {
+        const selected = (state.mode === 'Custom' && state.customScaleName === item.name) ? 'selected' : '';
+        html += `<option value="${item.id}" ${selected}>${item.name} (${formatNoteDisplay(item.rootKey)})</option>`;
+      });
+      sel.innerHTML = html;
+
+      if (state.mode === 'Custom' && state.customScaleName && list.some(x => x.name === state.customScaleName)) {
+        delBtn.classList.remove('hidden');
+      } else {
+        delBtn.classList.add('hidden');
+      }
+    }
+
+    function renderCustomIntervalBuilder() {
+      const panel = document.getElementById('customScaleBuilderPanel');
+      const grid = document.getElementById('customIntervalToggleGrid');
+      if (!panel || !grid) return;
+
+      if (state.mode !== 'Custom') {
+        panel.classList.add('hidden');
+        panel.classList.remove('flex');
+        return;
+      }
+
+      panel.classList.remove('hidden');
+      panel.classList.add('flex');
+
+      const rootParsed = parseNoteSpelling(state.rootKey);
+      let gHtml = '';
+      for (let semi = 0; semi < 12; semi++) {
+        const pc = (rootParsed.pitchClass + semi) % 12;
+        const noteName = formatNoteDisplay(CHROMATIC_SHARP_NAMES[pc]);
+        const deg = ALL_12_DEGREES[semi];
+        const active = state.customSemitones.has(semi);
+        gHtml += `
+          <button type="button" data-custom-semi="${semi}"
+            class="py-2.5 px-1 rounded-xl border font-black text-sm sm:text-base transition flex flex-col items-center justify-center gap-0.5 ${
+              active
+                ? 'bg-emerald-600 text-white border-emerald-400 shadow'
+                : 'bg-zinc-900 text-slate-400 border-zinc-800 hover:bg-zinc-800'
+            }">
+            <span>${noteName}</span>
+            <span class="text-xs opacity-85">${deg}</span>
+          </button>
+        `;
+      }
+      grid.innerHTML = gHtml;
+    }
+
+    function renderSettingsKeyAndModeSelectors() {
+      const keyGrid = document.getElementById('chromaticKeyGrid');
+      if (keyGrid) {
+        let kHtml = '';
+        CHROMATIC_KEYS.forEach(k => {
+          const active = state.rootKey === k.id;
+          kHtml += `
+            <button type="button" data-root-key="${k.id}"
+              class="key-btn py-3 rounded-xl font-black text-lg sm:text-xl border transition ${
+                active
+                  ? 'bg-indigo-600 text-white border-indigo-400 shadow-lg shadow-indigo-600/30'
+                  : 'bg-zinc-800 hover:bg-zinc-700 text-slate-200 border-zinc-700'
+              }">
+              ${k.label}
+            </button>
+          `;
+        });
+        keyGrid.innerHTML = kHtml;
+      }
+
+      const modeGrid = document.getElementById('modeButtonGrid');
+      if (modeGrid) {
+        let mHtml = '';
+        Object.keys(MODES).forEach(mKey => {
+          const active = state.mode === mKey;
+          const label = mKey === 'Custom' ? '+ Custom' : MODES[mKey].label;
+          mHtml += `
+            <button type="button" data-mode-name="${mKey}"
+              class="key-btn py-2.5 px-2 rounded-xl font-extrabold text-sm sm:text-base border transition ${
+                active
+                  ? 'bg-amber-500 text-slate-950 border-amber-300 shadow-lg shadow-amber-500/20'
+                  : 'bg-zinc-800 hover:bg-zinc-700 text-slate-300 border-zinc-700'
+              }">
+              ${label}
+            </button>
+          `;
+        });
+        modeGrid.innerHTML = mHtml;
+      }
+
+      renderCustomScaleDropdown();
+      renderCustomIntervalBuilder();
+    }
+
+    function updateSettingsLabels() {
+      const modeLabel = state.mode === 'Custom' && state.customScaleName
+        ? state.customScaleName
+        : (MODES[state.mode] ? MODES[state.mode].label : state.mode);
+
+      document.getElementById('headerModeBadge').textContent = `${formatNoteDisplay(state.rootKey)} ${modeLabel}`;
+      // Requirement #5: No note range or fret range in Quiz tab header
+      document.getElementById('sheetTitleLabel').textContent = `${formatNoteDisplay(state.rootKey)} ${modeLabel}`;
+      document.getElementById('fretRangeLabel').textContent = `${state.minFret} – ${state.maxFret}`;
+
+      // Requirement #4: Automatically show associated Treble Clef range from Fret Range
+      const { lowLabel, highLabel } = getAutoClefBounds();
+      const clefEl = document.getElementById('autoClefRangeDisplay');
+      if (clefEl) {
+        clefEl.textContent = `${lowLabel} – ${highLabel}`;
+      }
+
+      // Scale notes + Ionian-relative degrees
+      const spellings = getModeSpellings(state.rootKey, state.mode);
+      const previewEl = document.getElementById('scaleNotesPreview');
+      if (previewEl) {
+        const cols = spellings.length <= 7 ? `grid-cols-${Math.max(1, spellings.length)}` : 'grid-cols-4 sm:grid-cols-6 md:grid-cols-12';
+        let pHtml = `<div class="grid ${cols} gap-2 text-center" style="grid-template-columns: repeat(${Math.min(12, spellings.length)}, minmax(0, 1fr));">`;
+        spellings.forEach((sp) => {
+          const isAlteredFromIonian = sp.degreeLabel.includes('♭') || sp.degreeLabel.includes('♯');
+          pHtml += `
+            <div class="bg-zinc-900 border border-zinc-800 rounded-xl py-2.5 px-1 flex flex-col items-center justify-center gap-1">
+              <div class="text-xl sm:text-2xl font-black text-white tracking-tight">${formatNoteDisplay(sp.name)}</div>
+              <div class="text-xs sm:text-sm font-extrabold px-2 py-0.5 rounded-md ${
+                isAlteredFromIonian ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40' : 'text-indigo-300'
+              }">${sp.degreeLabel}</div>
+            </div>
+          `;
+        });
+        pHtml += `</div>`;
+        previewEl.innerHTML = pHtml;
+      }
+
+      renderSettingsKeyAndModeSelectors();
+    }
+
+    function switchMainView(viewName, forceAfterStop = false) {
+      // Prevent accessing quiz unless session was started from Settings
+      if (viewName === 'quiz' && !state.sessionActive) {
+        return;
+      }
+
+      // If user is currently in an active quiz session and clicks any other tab, prompt to save session first
+      if (state.sessionActive && viewName !== 'quiz' && !forceAfterStop) {
+        promptStopSession();
+        return;
+      }
+
+      const topHeader = document.getElementById('topNavHeader');
+      if (topHeader) {
+        if (viewName === 'quiz') {
+          topHeader.classList.add('hidden');
+        } else {
+          topHeader.classList.remove('hidden');
+        }
+      }
+
+      const vSettings = document.getElementById('viewSettings');
+      const vQuiz = document.getElementById('viewQuiz');
+      const vGuide = document.getElementById('viewGuide');
+      const vStats = document.getElementById('viewStats');
+
+      const bSettings = document.getElementById('navTabSettings');
+      const bQuiz = document.getElementById('navTabQuiz');
+      const bGuide = document.getElementById('navTabGuide');
+      const bStats = document.getElementById('navTabStats');
+
+      [vSettings, vQuiz, vGuide, vStats].forEach(v => {
+        v.classList.add('hidden');
+        v.classList.remove('flex');
+      });
+
+      const inactiveCls = 'px-3.5 py-2 rounded-lg text-sm sm:text-base font-bold transition-all text-slate-300 hover:text-white';
+      const activeCls = 'px-3.5 py-2 rounded-lg text-sm sm:text-base font-bold transition-all bg-indigo-600 text-white shadow';
+
+      bSettings.className = inactiveCls;
+      bGuide.className = inactiveCls;
+      bStats.className = inactiveCls;
+
+      // Quiz tab is only shown while a session is active
+      if (state.sessionActive) {
+        bQuiz.className = viewName === 'quiz' ? activeCls : inactiveCls;
+      } else {
+        bQuiz.className = 'hidden ' + inactiveCls;
+      }
+
+      if (viewName === 'settings') {
+        vSettings.classList.remove('hidden');
+        vSettings.classList.add('flex');
+        bSettings.className = activeCls;
+        updateSettingsLabels();
+      } else if (viewName === 'quiz') {
+        vQuiz.classList.remove('hidden');
+        vQuiz.classList.add('flex');
+        bQuiz.className = activeCls;
+        state.isPaused = false;
+        state.noteStartTimeMs = Date.now();
+        renderNotationSvg();
+        scrollToActiveNote();
+      } else if (viewName === 'guide') {
+        vGuide.classList.remove('hidden');
+        vGuide.classList.add('flex');
+        bGuide.className = activeCls;
+        renderFretboardMap();
+      } else if (viewName === 'stats') {
+        vStats.classList.remove('hidden');
+        vStats.classList.add('flex');
+        bStats.className = activeCls;
+        renderAnalyticsDashboard();
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      // Attach standalone Web App Manifest dynamically using embedded logo
+      try {
+        const logoImg = document.querySelector('#topNavHeader img');
+        const iconSrc = logoImg ? logoImg.src : '';
+        const manifestObj = {
+          name: 'FretGym',
+          short_name: 'FretGym',
+          description: 'Guitar Fretboard & Sight-Reading Trainer',
+          start_url: '.',
+          display: 'standalone',
+          orientation: 'any',
+          background_color: '#09090b',
+          theme_color: '#09090b',
+          icons: iconSrc ? [
+            { src: iconSrc, sizes: '96x96', type: 'image/jpeg', purpose: 'any maskable' },
+            { src: iconSrc, sizes: '192x192', type: 'image/jpeg', purpose: 'any maskable' },
+            { src: iconSrc, sizes: '512x512', type: 'image/jpeg', purpose: 'any maskable' }
+          ] : []
+        };
+        const manifestBlob = new Blob([JSON.stringify(manifestObj)], { type: 'application/manifest+json' });
+        const manifestLink = document.createElement('link');
+        manifestLink.rel = 'manifest';
+        manifestLink.href = URL.createObjectURL(manifestBlob);
+        document.head.appendChild(manifestLink);
+        if (iconSrc) {
+          const appleIcon = document.createElement('link');
+          appleIcon.rel = 'apple-touch-icon';
+          appleIcon.href = iconSrc;
+          document.head.appendChild(appleIcon);
+        }
+      } catch (e) {}
+      const today = new Date();
+      const monthAgo = new Date(today.getTime() - 14 * 86400000);
+      document.getElementById('inputDateTo').value = getLocalDateStr(today);
+      document.getElementById('inputDateFrom').value = getLocalDateStr(monthAgo);
+
+      updateSettingsLabels();
+      initQuestionStream();
+      switchMainView('settings');
+
+      // Live 1-second session timer
+      setInterval(() => {
+        if (state.sessionActive && !state.isPaused && !document.getElementById('viewQuiz').classList.contains('hidden')) {
+          state.elapsedSec += 1;
+          const timerEl = document.getElementById('hudTimer');
+          if (timerEl) timerEl.textContent = formatDuration(state.elapsedSec);
+        }
+      }, 1000);
+
+      // Navigation tabs
+      document.getElementById('navTabSettings').addEventListener('click', () => switchMainView('settings'));
+      document.getElementById('navTabQuiz').addEventListener('click', () => switchMainView('quiz'));
+      document.getElementById('navTabGuide').addEventListener('click', () => switchMainView('guide'));
+      document.getElementById('navTabStats').addEventListener('click', () => switchMainView('stats'));
+
+      // Start Session CTA
+      document.getElementById('btnStartSession').addEventListener('click', startNewQuizSession);
+
+      // Audio toggle
+      document.getElementById('btnAudioToggle').addEventListener('click', () => {
+        soundEnabled = !soundEnabled;
+        document.getElementById('audioIcon').textContent = soundEnabled ? '🔊' : '🔇';
+        document.getElementById('audioLabel').textContent = soundEnabled ? 'Acoustic' : 'Muted';
+      });
+
+      // Chromatic Key Grid
+      document.getElementById('chromaticKeyGrid').addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-root-key]');
+        if (!btn) return;
+        state.rootKey = btn.getAttribute('data-root-key');
+        updateSettingsLabels();
+        initQuestionStream();
+      });
+
+      // Mode Button Grid
+      document.getElementById('modeButtonGrid').addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-mode-name]');
+        if (!btn) return;
+        state.mode = btn.getAttribute('data-mode-name');
+        if (state.mode !== 'Custom') {
+          state.customScaleName = '';
+        }
+        const total = getModeSpellings(state.rootKey, state.mode).length;
+        state.selectedIntervals = new Set(Array.from({ length: total }, (_, i) => i));
+        updateSettingsLabels();
+        initQuestionStream();
+      });
+
+      // Custom Scale Interval Toggle
+      document.getElementById('customIntervalToggleGrid').addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-custom-semi]');
+        if (!btn) return;
+        const semi = Number(btn.getAttribute('data-custom-semi'));
+        if (state.customSemitones.has(semi)) {
+          if (state.customSemitones.size === 1) return;
+          state.customSemitones.delete(semi);
+        } else {
+          state.customSemitones.add(semi);
+        }
+        const total = state.customSemitones.size;
+        state.selectedIntervals = new Set(Array.from({ length: total }, (_, i) => i));
+        updateSettingsLabels();
+        initQuestionStream();
+      });
+
+      // Save Custom Scale
+      document.getElementById('btnSaveCustomScale').addEventListener('click', () => {
+        const nameInput = document.getElementById('inputCustomScaleName');
+        const name = (nameInput.value || '').trim();
+        if (!name) {
+          showToast('Enter a name for your custom scale');
+          return;
+        }
+        const list = loadCustomScales().filter(x => x.name !== name);
+        const newEntry = {
+          id: 'cscale_' + Date.now(),
+          name,
+          rootKey: state.rootKey,
+          semitones: Array.from(state.customSemitones).sort((a, b) => a - b)
+        };
+        list.push(newEntry);
+        saveCustomScalesList(list);
+        state.mode = 'Custom';
+        state.customScaleName = name;
+        nameInput.value = '';
+        updateSettingsLabels();
+        showToast(`Saved custom scale "${name}"`);
+      });
+
+      // Load Saved Custom Scale from Dropdown
+      document.getElementById('selectSavedCustomScale').addEventListener('change', (e) => {
+        const id = e.target.value;
+        if (!id) return;
+        const found = loadCustomScales().find(x => x.id === id);
+        if (!found) return;
+        state.rootKey = found.rootKey;
+        state.mode = 'Custom';
+        state.customScaleName = found.name;
+        state.customSemitones = new Set(found.semitones);
+        const total = state.customSemitones.size;
+        state.selectedIntervals = new Set(Array.from({ length: total }, (_, i) => i));
+        updateSettingsLabels();
+        initQuestionStream();
+        showToast(`Loaded "${found.name}"`);
+      });
+
+      // Delete Saved Custom Scale
+      document.getElementById('btnDeleteCustomScale').addEventListener('click', () => {
+        if (!state.customScaleName) return;
+        const list = loadCustomScales().filter(x => x.name !== state.customScaleName);
+        saveCustomScalesList(list);
+        state.customScaleName = '';
+        state.mode = 'Ionian';
+        updateSettingsLabels();
+        initQuestionStream();
+        showToast('Custom scale deleted');
+      });
+
+      // Fret Range Inputs (Automatically updates Treble Clef Range)
+      document.getElementById('inputMinFret').addEventListener('change', (e) => {
+        state.minFret = Math.max(0, Math.min(24, Number(e.target.value) || 0));
+        if (state.minFret > state.maxFret) {
+          state.maxFret = state.minFret;
+          document.getElementById('inputMaxFret').value = String(state.maxFret);
+        }
+        updateSettingsLabels();
+        initQuestionStream();
+      });
+      document.getElementById('inputMaxFret').addEventListener('change', (e) => {
+        state.maxFret = Math.max(0, Math.min(24, Number(e.target.value) || 0));
+        if (state.maxFret < state.minFret) {
+          state.minFret = state.maxFret;
+          document.getElementById('inputMinFret').value = String(state.minFret);
+        }
+        updateSettingsLabels();
+        initQuestionStream();
+      });
+      document.getElementById('selectAccidentalStyle').addEventListener('change', (e) => {
+        state.accidentalStyle = e.target.value;
+        renderNotationSvg();
+      });
+
+      document.querySelectorAll('.fret-preset-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const [minStr, maxStr] = btn.getAttribute('data-fret-preset').split('-');
+          state.minFret = Number(minStr);
+          state.maxFret = Number(maxStr);
+          document.getElementById('inputMinFret').value = minStr;
+          document.getElementById('inputMaxFret').value = maxStr;
+          updateSettingsLabels();
+          initQuestionStream();
+        });
+      });
+
+      // Strings 1-6 Toggle
+      document.getElementById('stringFilterGroup').addEventListener('click', (e) => {
+        const btn = e.target.closest('.str-toggle-btn');
+        if (!btn) return;
+        const sNum = Number(btn.getAttribute('data-string'));
+        if (state.activeStrings.includes(sNum)) {
+          if (state.activeStrings.length === 1) return;
+          state.activeStrings = state.activeStrings.filter(x => x !== sNum);
+          btn.className = 'str-toggle-btn py-3.5 rounded-xl text-lg font-black bg-zinc-900 text-slate-500 border border-zinc-700';
+        } else {
+          state.activeStrings.push(sNum);
+          state.activeStrings.sort();
+          btn.className = 'str-toggle-btn py-3.5 rounded-xl text-lg font-black bg-indigo-600 text-white';
+        }
+        updateSettingsLabels();
+        initQuestionStream();
+      });
+
+      // Quiz Dock Controls
+      document.querySelectorAll('.acc-btn').forEach(btn => {
+        btn.addEventListener('click', () => setAccidentalModifier(btn.getAttribute('data-acc')));
+      });
+      document.querySelectorAll('.note-letter-btn').forEach(btn => {
+        btn.addEventListener('click', () => selectNoteLetter(btn.getAttribute('data-note')));
+      });
+      document.getElementById('dockFretKeypad').addEventListener('click', (e) => {
+        const btn = e.target.closest('.fret-num-btn');
+        if (!btn) return;
+        selectFretNumber(Number(btn.getAttribute('data-fret')));
+      });
+
+      // Direct Tap on Staff or TAB SVG boxes
+      document.getElementById('notationSvg').addEventListener('click', (e) => {
+        const group = e.target.closest('[data-action]');
+        if (!group) return;
+        const idx = Number(group.getAttribute('data-idx'));
+        const action = group.getAttribute('data-action');
+        if (idx !== state.activeIndex) {
+          const q = state.questions[idx];
+          if (q) playGuitarTone(q.midi, false);
+          return;
+        }
+        if (action === 'tap-note-box') openDirectPopup('note');
+        else if (action === 'tap-fret-box') openDirectPopup('fret');
+      });
+
+      // Popup Controls (Requirement #2: Close popup after note & fret entered)
+      document.getElementById('btnClosePopup').addEventListener('click', closeDirectPopup);
+      document.querySelectorAll('.popup-acc-btn').forEach(btn => {
+        btn.addEventListener('click', () => setAccidentalModifier(btn.getAttribute('data-popup-acc')));
+      });
+      document.querySelectorAll('.popup-note-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          selectNoteLetter(btn.getAttribute('data-popup-letter'));
+        });
+      });
+      document.getElementById('popupFretGrid').addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-popup-fret]');
+        if (!btn) return;
+        selectFretNumber(Number(btn.getAttribute('data-popup-fret')));
+      });
+
+      // Hint & Skip
+      document.getElementById('btnHintPeek').addEventListener('click', () => {
+        const q = state.questions[state.activeIndex];
+        if (!q) return;
+        playGuitarTone(q.midi, false);
+        const banner = document.getElementById('liveFeedbackBanner');
+        banner.className = 'text-xs sm:text-sm font-extrabold px-3 py-1 rounded-lg bg-amber-100 text-amber-900 border border-amber-300';
+        banner.textContent = `💡 ${formatNoteDisplay(q.noteName)} · String ${q.stringNum} Fret ${q.fret}`;
+      });
+
+      document.getElementById('btnSkipNote').addEventListener('click', () => {
+        state.activeIndex += 1;
+        state.pendingNoteAnswer = null;
+        state.pendingFretAnswer = null;
+        state.noteStartTimeMs = Date.now();
+        while (state.questions.length - state.activeIndex < 10) {
+          state.questions.push(generateNextQuestion(state.questions[state.questions.length - 1]));
+        }
+        updateDockUI();
+        renderNotationSvg();
+        scrollToActiveNote();
+      });
+
+      // Pause / Resume & Stop Session Prompt (Requirement #9)
+      document.getElementById('btnPauseResume').addEventListener('click', (e) => {
+        state.isPaused = !state.isPaused;
+        e.target.textContent = state.isPaused ? 'Resume' : 'Pause';
+      });
+      document.getElementById('btnStopSession').addEventListener('click', promptStopSession);
+      document.getElementById('btnStopSaveYes').addEventListener('click', confirmSaveSessionYes);
+      document.getElementById('btnStopDiscardNo').addEventListener('click', confirmSaveSessionNo);
+
+      // Fretboard Map Controls
+      document.getElementById('btnMapShowNotes').addEventListener('click', () => {
+        state.mapDisplayMode = 'notes';
+        document.getElementById('btnMapShowNotes').className = 'px-3 py-1.5 rounded-lg text-xs sm:text-sm font-bold bg-indigo-600 text-white';
+        document.getElementById('btnMapShowIntervals').className = 'px-3 py-1.5 rounded-lg text-xs sm:text-sm font-bold text-slate-400 hover:text-white';
+        renderFretboardMap();
+      });
+
+      document.getElementById('btnMapShowIntervals').addEventListener('click', () => {
+        state.mapDisplayMode = 'intervals';
+        document.getElementById('btnMapShowIntervals').className = 'px-3 py-1.5 rounded-lg text-xs sm:text-sm font-bold bg-indigo-600 text-white';
+        document.getElementById('btnMapShowNotes').className = 'px-3 py-1.5 rounded-lg text-xs sm:text-sm font-bold text-slate-400 hover:text-white';
+        renderFretboardMap();
+      });
+
+      document.getElementById('mapIntervalSelector').addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-toggle-interval]');
+        if (!btn) return;
+        const idx = Number(btn.getAttribute('data-toggle-interval'));
+        if (state.selectedIntervals.has(idx)) {
+          state.selectedIntervals.delete(idx);
+        } else {
+          state.selectedIntervals.add(idx);
+        }
+        renderFretboardMap();
+      });
+
+      document.getElementById('btnToggleAllIntervals').addEventListener('click', () => {
+        const total = getModeSpellings(state.rootKey, state.mode).length;
+        if (state.selectedIntervals.size >= total) {
+          state.selectedIntervals.clear();
+        } else {
+          for (let i = 0; i < total; i++) state.selectedIntervals.add(i);
+        }
+        renderFretboardMap();
+      });
+
+      document.getElementById('fretboardMapContainer').addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-map-midi]');
+        if (!btn) return;
+        playGuitarTone(Number(btn.getAttribute('data-map-midi')), false);
+      });
+
+      // Analytics Controls
+      document.querySelectorAll('.period-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          state.statPeriod = btn.getAttribute('data-period');
+          document.querySelectorAll('.period-btn').forEach(b => {
+            const isCustomBtn = b.id === 'btnPeriodCustom';
+            if (b === btn) {
+              b.className = isCustomBtn
+                ? 'period-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-indigo-600 text-white border border-indigo-400 shadow'
+                : 'period-btn px-3.5 py-2 rounded-lg text-xs sm:text-sm font-bold bg-indigo-600 text-white';
+            } else {
+              b.className = isCustomBtn
+                ? 'period-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-zinc-800 hover:bg-zinc-700 text-slate-300 border border-zinc-700'
+                : 'period-btn px-3.5 py-2 rounded-lg text-xs sm:text-sm font-bold text-slate-400 hover:text-white';
+            }
+          });
+          const customBox = document.getElementById('customDateRangeBox');
+          if (state.statPeriod === 'custom') {
+            customBox.classList.remove('hidden');
+            customBox.classList.add('flex');
+          } else {
+            customBox.classList.add('hidden');
+            customBox.classList.remove('flex');
+          }
+          renderAnalyticsDashboard();
+        });
+      });
+
+      document.getElementById('selectStatMetric').addEventListener('change', (e) => {
+        state.statMetric = e.target.value;
+        renderAnalyticsDashboard();
+      });
+      document.getElementById('inputDateFrom').addEventListener('change', renderAnalyticsDashboard);
+      document.getElementById('inputDateTo').addEventListener('change', renderAnalyticsDashboard);
+
+      document.getElementById('btnExportExcel').addEventListener('click', exportCustomRangeExcel);
+
+      document.getElementById('btnLoadMoreSessions').addEventListener('click', () => {
+        state.visibleLogCount += 5;
+        renderAnalyticsDashboard();
+      });
+
+      let pendingDeleteTarget = null; // 'all' or session id
+
+      function openDeleteConfirmModal(target) {
+        pendingDeleteTarget = target;
+        const msgEl = document.getElementById('deleteModalMessage');
+        if (target === 'all') {
+          msgEl.textContent = 'Are you sure you want to delete all saved sessions? This cannot be undone.';
+        } else {
+          msgEl.textContent = 'Are you sure you want to delete this session? This cannot be undone.';
+        }
+        document.getElementById('deleteSessionConfirmModal').classList.remove('hidden');
+      }
+
+      document.getElementById('btnDeleteCancel').addEventListener('click', () => {
+        pendingDeleteTarget = null;
+        document.getElementById('deleteSessionConfirmModal').classList.add('hidden');
+      });
+
+      document.getElementById('btnDeleteConfirmYes').addEventListener('click', () => {
+        if (!pendingDeleteTarget) return;
+        if (pendingDeleteTarget === 'all') {
+          saveLogs([]);
+          showToast('All sessions deleted');
+        } else {
+          saveLogs(loadLogs().filter(x => x.id !== pendingDeleteTarget));
+          showToast('Session deleted');
+        }
+        pendingDeleteTarget = null;
+        document.getElementById('deleteSessionConfirmModal').classList.add('hidden');
+        renderAnalyticsDashboard();
+      });
+
+      document.getElementById('btnClearLogs').addEventListener('click', () => {
+        openDeleteConfirmModal('all');
+      });
+
+      document.getElementById('rawSessionTableBody').addEventListener('click', (e) => {
+        const delBtn = e.target.closest('[data-del-session]');
+        if (!delBtn) return;
+        const id = delBtn.getAttribute('data-del-session');
+        openDeleteConfirmModal(id);
+      });
+
+      // Keyboard Shortcuts
+      window.addEventListener('keydown', (e) => {
+        if (document.getElementById('viewQuiz').classList.contains('hidden')) return;
+        if (['INPUT', 'SELECT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
+
+        const key = e.key;
+        if (/^[a-gA-G]$/.test(key)) {
+          selectNoteLetter(key.toUpperCase());
+        } else if (key === '#') {
+          setAccidentalModifier('#');
+        } else if (key === '=') {
+          setAccidentalModifier('');
+        } else if (/^[0-9]$/.test(key)) {
+          selectFretNumber(Number(key));
+        }
+      });
+    });
+  </script>
+</body>
+</html>
